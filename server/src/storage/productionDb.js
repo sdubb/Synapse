@@ -122,13 +122,34 @@ export class ProductionDatabase {
         trigger_type TEXT NOT NULL,
         severity TEXT NOT NULL,
         reason TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'TRIGGERED_STATE_FROZEN',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        status TEXT NOT NULL,
         transaction_id TEXT,
-        runbook_json TEXT NOT NULL,
-        resolved_action TEXT,
+        runbook_json TEXT,
+        resolved_at DATETIME,
         resolved_by TEXT,
-        resolved_at DATETIME
+        resolution_notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS agent_identities (
+        agent_id TEXT PRIMARY KEY,
+        public_key TEXT NOT NULL,
+        encrypted_private_key_json TEXT NOT NULL,
+        key_fingerprint TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS rollback_journal (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        transaction_id TEXT NOT NULL,
+        step_number INTEGER NOT NULL,
+        forward_tool TEXT NOT NULL,
+        forward_params_json TEXT NOT NULL,
+        inverse_tool TEXT NOT NULL,
+        inverse_params_json TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        reverted_at DATETIME
       );
 
       -- 7. Google A2A Cross-Agent Delegation Ledger Table
@@ -550,6 +571,57 @@ export class ProductionDatabase {
     } catch (e) {
       return [];
     }
+  }
+
+  // --- Agent Identities (Cryptographic Key Persistence) ---
+  getAgentIdentity(agentId) {
+    return this.db.prepare("SELECT * FROM agent_identities WHERE agent_id = ?").get(agentId) || null;
+  }
+
+  insertAgentIdentity(agentId, publicKey, encryptedPrivateKeyJson, keyFingerprint) {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO agent_identities (agent_id, public_key, encrypted_private_key_json, key_fingerprint, created_at)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `);
+    stmt.run(agentId, publicKey, typeof encryptedPrivateKeyJson === "string" ? encryptedPrivateKeyJson : JSON.stringify(encryptedPrivateKeyJson), keyFingerprint);
+    return { agentId, publicKey, keyFingerprint };
+  }
+
+  // --- Rollback Journal (Persisted Transaction Reversals) ---
+  recordRollbackOperation(txId, stepNumber, forwardTool, forwardParams, inverseTool, inverseParams) {
+    const stmt = this.db.prepare(`
+      INSERT INTO rollback_journal (transaction_id, step_number, forward_tool, forward_params_json, inverse_tool, inverse_params_json, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, 'PENDING', CURRENT_TIMESTAMP)
+    `);
+    const info = stmt.run(
+      txId,
+      stepNumber,
+      forwardTool,
+      JSON.stringify(forwardParams || {}),
+      inverseTool,
+      JSON.stringify(inverseParams || {})
+    );
+    return { id: info.lastInsertRowid, txId, stepNumber, forwardTool, inverseTool };
+  }
+
+  getRollbackJournal(txId) {
+    const rows = this.db.prepare("SELECT * FROM rollback_journal WHERE transaction_id = ? ORDER BY step_number DESC").all(txId);
+    return rows.map(r => ({
+      id: r.id,
+      txId: r.transaction_id,
+      stepNumber: r.step_number,
+      forwardTool: r.forward_tool,
+      forwardParams: JSON.parse(r.forward_params_json || "{}"),
+      inverseTool: r.inverse_tool,
+      inverseParams: JSON.parse(r.inverse_params_json || "{}"),
+      status: r.status,
+      createdAt: r.created_at,
+      revertedAt: r.reverted_at
+    }));
+  }
+
+  markRollbackExecuted(id) {
+    this.db.prepare("UPDATE rollback_journal SET status = 'REVERTED', reverted_at = CURRENT_TIMESTAMP WHERE id = ?").run(id);
   }
 }
 

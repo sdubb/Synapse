@@ -1,7 +1,13 @@
-﻿import { persistentStore } from "./persistentStore.js";
+import { persistentStore } from "./persistentStore.js";
 import crypto from "crypto";
 
 export function seedFullEnterpriseDemoData() {
+  if (process.env.NODE_ENV === "production" || process.env.SYNAPSE_ENV === "production") {
+    throw new Error("SECURITY_ERROR: seedFullEnterpriseDemoData is strictly forbidden in PRODUCTION environment.");
+  }
+
+  console.log("ℹ️ [DEV_ONLY_SEED]: Seeding static synthetic demo transactions for local development/testing harness only (NODE_ENV != 'production').");
+
   // 1. Seed Rich Approvals
   const existingApprovals = persistentStore.getApprovals();
   if (existingApprovals.length === 0) {

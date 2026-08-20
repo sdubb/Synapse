@@ -1,130 +1,101 @@
-﻿import crypto from "crypto";
+import crypto from "crypto";
+import { productionDb } from "../storage/productionDb.js";
+import { realSecretsVault } from "../secrets/realSecretsVault.js";
 
-export class AgentIdentityDirectory {
+/**
+ * Real Persistent Agent Identity Engine
+ * 
+ * Manages asymmetric RSA-2048 identity keypairs for enterprise agents:
+ * - Generates cryptographically secure RSA keypairs
+ * - Encrypts private keys at rest via AES-256-GCM (RealSecretsVault)
+ * - Persists public keys, encrypted private keys, and SHA-256 fingerprints in SQLite
+ * - Returns the identical, persistent keypair on repeat calls and across process restarts
+ * - Signs payload directives and validates cryptographic signatures
+ */
+export class PersistentIdentityEngine {
   constructor() {
-    this.workforce = [
-      {
-        id: "Finance-Agent-024",
-        name: "Autonomous Invoice & Refund Reconciler",
-        department: "Finance & Accounting",
-        ownerEmail: "cfo-ops@enterprise.com",
-        model: "claude-3-5-sonnet",
-        modelProvider: "Anthropic",
-        status: "ACTIVE", // ACTIVE | QUARANTINED | SUSPENDED | TESTING
-        securityScore: 88,
-        reliabilityScore: 99.2,
-        riskLevel: "LOW",
-        spendLimitUsd: 500.0,
-        allowedTools: ["fetch_invoice_details", "execute_charge", "issue_refund"],
-        delegationWhitelist: ["Billing-Agent-001", "Support-Agent-108"],
-        tasksExecuted: 14203,
-        lastPentest: "4 hours ago",
-        passportSignature: "a1f9e832049b819f"
-      },
-      {
-        id: "DevOps-SRE-Agent-089",
-        name: "Cloud Auto-Remediation & K8s SRE",
-        department: "Cloud Infrastructure",
-        ownerEmail: "sre-lead@enterprise.com",
-        model: "gpt-4o",
-        modelProvider: "OpenAI",
-        status: "ACTIVE",
-        securityScore: 42,
-        reliabilityScore: 84.5,
-        riskLevel: "HIGH",
-        spendLimitUsd: 2500.0,
-        allowedTools: ["check_cluster_health", "scale_pods", "restart_service"],
-        delegationWhitelist: ["Security-Agent-007"],
-        tasksExecuted: 8920,
-        lastPentest: "1 day ago",
-        passportSignature: "f48c218e00192a77"
-      },
-      {
-        id: "HR-Support-Agent-301",
-        name: "Global Employee Triage & Helpdesk",
-        department: "Human Resources",
-        ownerEmail: "people-ops@enterprise.com",
-        model: "gemini-1-5-pro",
-        modelProvider: "Google Cloud",
-        status: "ACTIVE",
-        securityScore: 94,
-        reliabilityScore: 98.7,
-        riskLevel: "LOW",
-        spendLimitUsd: 0.0,
-        allowedTools: ["lookup_policy", "send_slack_message", "create_ticket"],
-        delegationWhitelist: [],
-        tasksExecuted: 31050,
-        lastPentest: "2 hours ago",
-        passportSignature: "cc3918bf8841a0e3"
-      },
-      {
-        id: "Procurement-Agent-112",
-        name: "Vendor Negotiation & PO Dispatcher",
-        department: "Supply Chain",
-        ownerEmail: "procure@enterprise.com",
-        model: "llama-3-70b-custom",
-        modelProvider: "Self-Hosted On-Prem",
-        status: "QUARANTINED",
-        securityScore: 31,
-        reliabilityScore: 68.0,
-        riskLevel: "CRITICAL",
-        spendLimitUsd: 10000.0,
-        allowedTools: ["draft_po", "dispatch_rfp", "vendor_payout"],
-        delegationWhitelist: ["Finance-Agent-024"],
-        tasksExecuted: 4120,
-        lastPentest: "30 mins ago",
-        passportSignature: "00918fa9c339a112"
-      }
-    ];
+    this.tenantId = "synapse-core-identity";
   }
 
-  getWorkforce() {
-    return this.workforce;
-  }
+  /**
+   * Retrieves an existing persisted identity or generates and saves a new RSA-2048 keypair
+   */
+  getOrCreateIdentity(agentId) {
+    if (!agentId) throw new Error("agentId is required to retrieve or generate identity");
 
-  getAgent(agentId) {
-    return this.workforce.find(a => a.id === agentId);
-  }
+    // 1. Check SQLite for existing persisted identity
+    const existing = productionDb.getAgentIdentity(agentId);
+    if (existing) {
+      const encryptedKeyObj = JSON.parse(existing.encrypted_private_key_json);
+      const privateKeyPem = realSecretsVault.decrypt(encryptedKeyObj);
 
-  updateAgent(agentId, updates) {
-    const agent = this.workforce.find(a => a.id === agentId);
-    if (agent) {
-      Object.assign(agent, updates);
-      return agent;
+      return {
+        agentId: existing.agent_id,
+        publicKey: existing.public_key,
+        privateKey: privateKeyPem,
+        keyFingerprint: existing.key_fingerprint,
+        createdAt: existing.created_at,
+        isPersisted: true,
+        source: "SQLITE_PERSISTED_KEYPAIR"
+      };
     }
-    return null;
-  }
 
-  toggleKillSwitch(agentId, reason = "Manual emergency shutdown triggered by CTO") {
-    const agent = this.workforce.find(a => a.id === agentId);
-    if (agent) {
-      agent.status = agent.status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED";
-      agent.killSwitchReason = agent.status === "SUSPENDED" ? reason : null;
-      return agent;
-    }
-    return null;
-  }
+    // 2. Generate genuine RSA-2048 Keypair
+    const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: "spki", format: "pem" },
+      privateKeyEncoding: { type: "pkcs8", format: "pem" }
+    });
 
-  registerAgent(agentData) {
-    const newAgent = {
-      id: agentData.id || "Agent-" + crypto.randomBytes(3).toString("hex").toUpperCase(),
-      name: agentData.name || "Custom AI Worker",
-      department: agentData.department || "Engineering",
-      ownerEmail: agentData.ownerEmail || "admin@enterprise.com",
-      model: agentData.model || "gpt-4o",
-      modelProvider: agentData.modelProvider || "OpenAI",
-      status: "TESTING",
-      securityScore: 60,
-      reliabilityScore: 80.0,
-      riskLevel: "MEDIUM",
-      spendLimitUsd: agentData.spendLimitUsd || 100.0,
-      allowedTools: agentData.allowedTools || [],
-      delegationWhitelist: agentData.delegationWhitelist || [],
-      tasksExecuted: 0,
-      lastPentest: "Pending initial red-team",
-      passportSignature: crypto.randomBytes(8).toString("hex")
+    const keyFingerprint = crypto.createHash("sha256").update(publicKey).digest("hex").substring(0, 16);
+
+    // 3. Encrypt Private Key with AES-256-GCM
+    const encryptedPrivateKey = realSecretsVault.encrypt(privateKey);
+
+    // 4. Save to SQLite database
+    productionDb.insertAgentIdentity(agentId, publicKey, encryptedPrivateKey, keyFingerprint);
+
+    return {
+      agentId,
+      publicKey,
+      privateKey,
+      keyFingerprint,
+      createdAt: new Date().toISOString(),
+      isPersisted: true,
+      source: "NEWLY_GENERATED_AND_PERSISTED"
     };
-    this.workforce.push(newAgent);
-    return newAgent;
+  }
+
+  /**
+   * Cryptographically signs a message/directive using the agent's private key
+   */
+  signDirective(agentId, directive) {
+    const identity = this.getOrCreateIdentity(agentId);
+    const sign = crypto.createSign("SHA256");
+    sign.update(typeof directive === "string" ? directive : JSON.stringify(directive));
+    sign.end();
+    const signature = sign.sign(identity.privateKey, "hex");
+    return {
+      agentId,
+      keyFingerprint: identity.keyFingerprint,
+      signature,
+      algorithm: "RSA-SHA256"
+    };
+  }
+
+  /**
+   * Cryptographically verifies a signature against the agent's public key
+   */
+  verifyDirectiveSignature(publicKeyPem, directive, signatureHex) {
+    try {
+      const verify = crypto.createVerify("SHA256");
+      verify.update(typeof directive === "string" ? directive : JSON.stringify(directive));
+      verify.end();
+      return verify.verify(publicKeyPem, signatureHex, "hex");
+    } catch (e) {
+      return false;
+    }
   }
 }
+
+export const identityEngine = new PersistentIdentityEngine();
