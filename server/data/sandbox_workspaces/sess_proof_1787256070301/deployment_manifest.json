@@ -1,0 +1,9 @@
+{
+  "service": "auth-gateway",
+  "cluster": "prod-us-east-1",
+  "deployedAt": "2026-08-20T20:01:10.301Z",
+  "invariants": [
+    "OPA_ENFORCED",
+    "TAMPER_EVIDENT_AUDIT"
+  ]
+}
