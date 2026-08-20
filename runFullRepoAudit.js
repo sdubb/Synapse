@@ -257,7 +257,7 @@ const auditMap = {
   // 49. Verifier MCP Client
   "server/src/verification/verifierMcpClient.js": {
     classification: "REAL",
-    justification: "JSON-RPC client for executing verification probes via MCP tool servers."
+    justification: "JSON-RPC client communicating with MCP gateway with honest error propagation (no fake CONFIRMED_VIA_MCP fallbacks)."
   }
 };
 

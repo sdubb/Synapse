@@ -1,4 +1,4 @@
-﻿// Verifier MCP Read-Only Client
+// Verifier MCP Read-Only Client
 // Connects to Synapse Universal MCP Gateway on Port 4005 to independently query real systems using global fetch
 export class VerifierMcpClient {
   constructor(mcpGatewayUrl = "http://localhost:4005") {
@@ -27,14 +27,11 @@ export class VerifierMcpClient {
       const json = await response.json();
       return { success: true, result: json.result };
     } catch (err) {
-      console.warn(`[VERIFIER_MCP_FALLBACK]: Local sandbox execution for '${toolName}': ${err.message}`);
+      console.warn(`[VERIFIER_MCP_ERROR]: Failed to connect to MCP Gateway on ${this.mcpGatewayUrl}: ${err.message}`);
       return {
-        success: true,
-        result: {
-          status: "CONFIRMED_VIA_MCP",
-          tool: toolName,
-          groundTruthEvidence: { queriedAt: new Date().toISOString(), state: "CONFIRMED" }
-        }
+        success: false,
+        connected: false,
+        error: `MCP Gateway unavailable at ${this.mcpGatewayUrl}: ${err.message}`
       };
     }
   }

@@ -41,6 +41,7 @@ export class EnterpriseConnectorRegistry {
         category: "ITSM, SecOps & Enterprise HR",
         deploymentType: "IntegrationHub REST Flow Hook",
         secretServiceName: "servicenow_api_key",
+        probeUrl: "https://dev-instance.service-now.com/api/now/table/sys_user?sysparm_limit=1",
         activeAgentsCount: 0,
         description: "Monitors and governs IT incident auto-remediation, employee offboarding, and enterprise permission grants.",
         setupGuide: {
@@ -60,6 +61,7 @@ export class EnterpriseConnectorRegistry {
         category: "Cloud Infrastructure & Bedrock LLMs",
         deploymentType: "AWS Lambda Action Group Layer",
         secretServiceName: "aws_bedrock_access_key",
+        probeUrl: "https://bedrock.us-east-1.amazonaws.com/foundation-models",
         activeAgentsCount: 0,
         description: "Wraps Bedrock Action Groups in a low-latency Lambda governance layer for full trajectory validation.",
         setupGuide: {
@@ -79,6 +81,7 @@ export class EnterpriseConnectorRegistry {
         category: "Stateful Agent Graphs & Multi-Agent Swarms",
         deploymentType: "Python Checkpointer Class",
         secretServiceName: "langgraph_auth_token",
+        probeUrl: "https://api.smith.langchain.com/info",
         activeAgentsCount: 0,
         description: "Intercepts cyclical graph edges, multi-agent messages, and registers inverse states on every node.",
         setupGuide: {
@@ -98,6 +101,7 @@ export class EnterpriseConnectorRegistry {
         category: "Office 365, Power Platform & Azure",
         deploymentType: "Custom Connector Gateway",
         secretServiceName: "azure_copilot_client_secret",
+        probeUrl: "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
         activeAgentsCount: 0,
         description: "Governs Copilot plugins accessing SharePoint, Dynamics 365, and Power Automate workflows.",
         setupGuide: {
@@ -185,7 +189,7 @@ export class EnterpriseConnectorRegistry {
           networkLatencyMs: netLatencyMs
         };
         result.isHealthy = probeRes.ok;
-        result.status = probeRes.ok ? "LIVE_CONNECTED" : "NETWORK_DEGRADED";
+        result.status = probeRes.ok ? "LIVE_CONNECTED" : (probeRes.status === 401 || probeRes.status === 403 ? "LIVE_AUTH_FAILED" : "NETWORK_DEGRADED");
         result.details = probeRes.ok
           ? `Live HTTPS round-trip handshake successful (${netLatencyMs}ms).`
           : `Live HTTPS round-trip to ${probeUrl} returned HTTP ${probeRes.status} (${netLatencyMs}ms).`;
