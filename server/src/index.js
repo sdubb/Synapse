@@ -335,6 +335,7 @@ app.post("/api/v1/daemons/:agentId/stop", (req, res) => {
   res.json(result);
 });
 
+app.get("/api/v1/health", (req, res) => res.json({ status: "OK", uptime: process.uptime() }));
 app.get("/api/v1/stats", (req, res) => {
   const agents = productionDb.getAgents();
   const txs = productionDb.getTransactions();

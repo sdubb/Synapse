@@ -1,4 +1,4 @@
-﻿import crypto from "crypto";
+import crypto from "crypto";
 import fs from "fs";
 import { productionDb } from "../storage/productionDb.js";
 import { VERIFICATION_TIERS, CONTRACT_TYPES } from "./verificationContracts.js";
@@ -33,10 +33,22 @@ export class DeterministicContractEngine {
 
       // 3. Verify Real External API Output
       external_endpoint_status: async (params) => {
-        return {
-          matches: true,
-          raw: { endpoint: params.endpoint || "http://localhost:4000/api/v1/stats", statusCode: 200, latencyMs: 3.1 }
-        };
+        const start = performance.now();
+        const endpoint = params.endpoint || "http://localhost:4000/api/v1/health";
+        try {
+          const res = await fetch(endpoint, { method: "HEAD", signal: AbortSignal.timeout(3000) });
+          const latencyMs = Number((performance.now() - start).toFixed(2));
+          return {
+            matches: res.ok,
+            raw: { endpoint, statusCode: res.status, ok: res.ok, latencyMs }
+          };
+        } catch (err) {
+          const latencyMs = Number((performance.now() - start).toFixed(2));
+          return {
+            matches: false,
+            raw: { endpoint, error: err.message, latencyMs }
+          };
+        }
       },
 
       // 4. Verify Idempotency Key
