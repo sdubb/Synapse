@@ -34,10 +34,10 @@ export class CommandTokenNormalizer {
     // 5. Detect destructive statement patterns
     const destructivePatterns = [
       { rule: "DROP_TABLE_OR_DATABASE", regex: /\bDROP\s+(TABLE|DATABASE|SCHEMA|INDEX|VIEW)\b/i },
-      { rule: "TRUNCATE_TABLE", regex: /\bTRUNCATE\s+(TABLE)?\s*[A-Z0-9_]+/i },
-      { rule: "UNBOUNDED_DELETE", regex: /\bDELETE\s+FROM\s+[A-Z0-9_]+\s*(WHERE\s+(1=1|TRUE|'1'='1'))?$/i },
-      { rule: "UNBOUNDED_UPDATE", regex: /\bUPDATE\s+[A-Z0-9_]+\s+SET\s+[^;]+(?<!WHERE\s+.+)$/i },
-      { rule: "SYSTEM_DESTRUCTION", regex: /\b(RM\s+-RF|MKFS|DD\s+IF=|KILLALL\s+-9|SHRED)\b/i },
+      { rule: "TRUNCATE_TABLE", regex: /\bTRUNCATE\s+(TABLE\s+)?[A-Z0-9_]+/i },
+      { rule: "UNBOUNDED_DELETE", regex: /\bDELETE\s+FROM\s+[A-Z0-9_]+(\s+WHERE\s+(1=1|TRUE|'1'='1'|0=0))?/i },
+      { rule: "UNBOUNDED_UPDATE", regex: /\bUPDATE\s+[A-Z0-9_]+\s+SET\b/i },
+      { rule: "SYSTEM_DESTRUCTION", regex: /\b(RM\s+-RF|MKFS|DD\s+IF=|KILLALL\s+-9|SHRED|FORMAT\s+[A-Z]:)\b/i },
       { rule: "TERMINATE_WORKFORCE", regex: /\b(TERMINATE_ALL|KILL_ALL_AGENTS|PURGE_ALL_DATA)\b/i }
     ];
 

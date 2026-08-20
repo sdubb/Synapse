@@ -19,6 +19,7 @@ import { realRegoEvaluator } from "./policy/realRegoEvaluator.js";
 import { realSecretsVault } from "./secrets/realSecretsVault.js";
 import { EnterpriseConnectorRegistry } from "./connectors/enterpriseConnectors.js";
 import { DiagnosticsEngine } from "./core/diagnostics.js";
+import { pentestEngine } from "./pentest/pentestEngine.js";
 import { dagRuntimeExecutor } from "./runtime/dagRuntimeExecutor.js";
 
 const app = express();
@@ -288,6 +289,7 @@ app.get("/.well-known/:agentCard", (req, res) => {
   res.json(card);
 });
 app.get("/api/v1/a2a/cards", (req, res) => res.json({ cards: a2aMeshEngine.getAgentCards() }));
+app.get("/api/v1/a2a/trust-matrix", (req, res) => res.json({ trustMatrix: a2aMeshEngine.getTrustMatrix() }));
 app.get("/api/v1/a2a/messages", (req, res) => {
   res.json({ messages: a2aMeshEngine.getDelegationLogs(), cards: a2aMeshEngine.getAgentCards() });
 });
@@ -297,6 +299,26 @@ app.post("/api/v1/a2a/route", async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// --- Real Diagnostics & Live Probes ---
+app.post("/api/v1/diagnostics/verify", async (req, res) => {
+  try {
+    const report = await diagnostics.runFullDiagnostics(req.body.agentId || "agent-sales-ae");
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Real Adversarial Pentest Suite ---
+app.post("/api/v1/pentest/run", async (req, res) => {
+  try {
+    const report = await pentestEngine.runFullPentest(req.body);
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
