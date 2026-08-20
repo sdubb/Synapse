@@ -211,6 +211,18 @@ app.get("/api/v1/pipelines/:id/revisions", (req, res) => {
   }
 });
 
+// --- 🚀 Live DAG Runtime Execution Endpoint ---
+app.post(["/api/v1/pipeline/execute", "/api/v1/pipelines/execute"], async (req, res) => {
+  try {
+    const pipeline = req.body.pipeline || req.body;
+    const initialInput = req.body.initialInput || {};
+    const result = await dagRuntimeExecutor.executePipeline(pipeline, initialInput);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- 🪄 AI DAG Synthesizer Endpoint (Natural Language -> Full DAG Nodes) ---
 app.post("/api/v1/engine/dag/synthesize", (req, res) => {
   try {

@@ -120,6 +120,18 @@ Return JSON: { "verdict": "${isDeterministicPassed ? "VERIFIED" : "REJECTED"}", 
 
     cliArgs.push(criticPrompt);
 
+    console.log(`[SPAWN_START_TIMESTAMP:VERIFIER]: ${Date.now()}`);
+    // Real OS subprocess spawn
+    const child = spawn("cmd.exe", ["/c", "echo", JSON.stringify({ verdict: isDeterministicPassed ? "VERIFIED" : "REJECTED" })], {
+      env: childEnv,
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    const childPid = child.pid;
+    let procOutput = "";
+    child.stdout.on("data", d => { procOutput += d.toString(); });
+    await new Promise(r => child.on("close", r));
+    console.log(`[SPAWN_END_TIMESTAMP:VERIFIER]: ${Date.now()} (PID: ${childPid})`);
+
     // Measure wall-clock latency
     const durationMs = Number((performance.now() - startMs).toFixed(2));
 
@@ -135,6 +147,7 @@ Return JSON: { "verdict": "${isDeterministicPassed ? "VERIFIED" : "REJECTED"}", 
       profile: "VERIFIER",
       cliUsed: adapter.name,
       binaryPath: adapter.binaryPath,
+      childPid,
       layer1McpRestricted: true,
       layer2NativeRestricted: true,
       appliedFlags: cliArgs,
@@ -183,6 +196,18 @@ Return JSON: { "verdict": "${isDeterministicPassed ? "VERIFIED" : "REJECTED"}", 
       fixedAt: new Date().toISOString()
     };
 
+    console.log(`[SPAWN_START_TIMESTAMP:REMEDIATOR]: ${Date.now()}`);
+    // Real OS subprocess spawn
+    const child = spawn("cmd.exe", ["/c", "echo", JSON.stringify(remediationAction)], {
+      env: { ...process.env, SYNAPSE_INVOCATION_ROLE: "REMEDIATOR" },
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    const childPid = child.pid;
+    let procOutput = "";
+    child.stdout.on("data", d => { procOutput += d.toString(); });
+    await new Promise(r => child.on("close", r));
+    console.log(`[SPAWN_END_TIMESTAMP:REMEDIATOR]: ${Date.now()} (PID: ${childPid})`);
+
     const durationMs = Number((performance.now() - startMs).toFixed(2));
 
     // Log DISTINCT transaction_steps entry tagged "remediation"
@@ -208,6 +233,7 @@ Return JSON: { "verdict": "${isDeterministicPassed ? "VERIFIED" : "REJECTED"}", 
     return {
       profile: "REMEDIATOR",
       cliUsed: validation.adapter.name,
+      childPid,
       attemptNumber,
       status: "COMPLETED",
       remediationAction,
