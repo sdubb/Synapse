@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { SidebarNav } from "./components/SidebarNav";
 import { MasterPipelineStudio } from "./components/MasterPipelineStudio";
 import { LiveEmployeeConnectorHub } from "./components/LiveEmployeeConnectorHub";
@@ -150,8 +150,21 @@ export default function App() {
     return report;
   };
 
+  const TAB_TITLES = {
+    pipeline_studio: "Pipelines",
+    workforce: "Fleet",
+    hitl: "Approvals",
+    incidents: "Incidents",
+    policies: "Policies",
+    a2a: "A2A Mesh",
+    redteam: "Security",
+    connect: "CLI Hub",
+    diagnostics: "Diagnostics",
+    audit: "Audit log"
+  };
+
   return (
-    <div className="min-h-screen bg-[#08090E] text-slate-100 flex flex-col lg:flex-row selection:bg-indigo-500 selection:text-white font-sans antialiased">
+    <div className="min-h-screen bg-[#0A0E17] text-[#E2E8F0] flex flex-col lg:flex-row antialiased">
       <SidebarNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -160,39 +173,28 @@ export default function App() {
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <header className="border-b border-border bg-[#0C0E17]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-              {activeTab === "pipeline_studio" && "Visual Multi-Stage Agent Pipeline Architect & Creator"}
-              {activeTab === "workforce" && "Universal AI Fleet Supervisor & Policy Interceptor"}
-              {activeTab === "hitl" && "Human-in-the-Loop (HITL) Tri-State Approval Queue"}
-              {activeTab === "incidents" && "Post-Kill-Switch Operational Runbook & Triage"}
-              {activeTab === "policies" && "Rego / Open Policy Agent (OPA) Rule Compiler"}
-              {activeTab === "a2a" && "Agent-to-Agent (A2A) Trust Mesh & Cross-Agent Delegation"}
-              {activeTab === "redteam" && "Red-Team Automated AI Security Pentesting"}
-              {activeTab === "connect" && "Universal CLI Employee Hub (Claude / Cursor / agy / Codex)"}
-              {activeTab === "diagnostics" && "Zero-Mistake Diagnostic Verification Inspector"}
-              {activeTab === "audit" && "Cryptographic Immutable Audit Chain"}
-            </h2>
-          </div>
+        <header className="border-b border-[#1E293B] bg-[#0D1220]/90 backdrop-blur-md px-6 py-3.5 flex items-center justify-between sticky top-0 z-40">
+          <h2 className="text-sm font-semibold text-white tracking-tight">
+            {TAB_TITLES[activeTab] || "Synapse"}
+          </h2>
 
-          <div className="flex items-center gap-3 text-xs font-mono">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border text-slate-400">
-              <Activity className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Pipeline Engine: <strong className="text-slate-200">ACTIVE</strong></span>
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.04] text-[11px] text-[#94A3B8]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#34D399]" />
+              Engine running
             </div>
 
             <button
               onClick={fetchData}
-              className="p-2 rounded-lg bg-surface hover:bg-surface-hover border border-border text-slate-300 hover:text-white transition"
-              title="Refresh"
+              className="p-1.5 rounded-md hover:bg-white/[0.06] text-[#64748B] hover:text-[#E2E8F0] transition-colors"
+              title="Refresh data"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-3.5 h-3.5" />
             </button>
           </div>
         </header>
 
-        <main className="p-6 max-w-7xl mx-auto w-full flex-1">
+        <main className="px-6 py-5 max-w-6xl mx-auto w-full flex-1">
           {activeTab === "pipeline_studio" && (
             <MasterPipelineStudio onExecuteGoal={handleExecuteGoal} />
           )}
@@ -238,10 +240,6 @@ export default function App() {
             <AuditChainView />
           )}
         </main>
-
-        <footer className="border-t border-border bg-[#0C0E17] py-3 px-6 text-center text-xs text-slate-500 font-mono">
-          <span>Synapse Enterprise Autonomous AI Control Plane — Unified Pipeline Architecture Active</span>
-        </footer>
       </div>
     </div>
   );

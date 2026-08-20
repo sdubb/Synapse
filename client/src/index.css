@@ -2,42 +2,79 @@
 
 @layer base {
   :root {
-    --bg-primary: #0B0F17;
-    --bg-surface: #111827;
-    --bg-surface-subtle: #0F172A;
-    --border-subtle: #1E293B;
-    --border-strong: #334155;
-    --text-primary: #F8FAFC;
+    /* Deep Space palette — warm-dark, not pure black */
+    --void: #0A0E17;
+    --panel: #111827;
+    --well: #0D1220;
+    --wire: #1E293B;
+    --wire-strong: #334155;
+
+    /* Text hierarchy */
+    --text-primary: #E2E8F0;
     --text-secondary: #94A3B8;
-    --text-muted: #64748B;
-    --accent-blue: #2563EB;
+    --text-dim: #64748B;
+    --text-ghost: #475569;
+
+    /* Iris — the single distinctive accent */
+    --iris: #818CF8;
+    --iris-dim: rgba(129, 140, 248, 0.15);
+    --iris-strong: #6366F1;
+
+    /* Functional color — used only where semantics demand it */
+    --thermal: #FB923C;
+    --thermal-dim: rgba(251, 146, 60, 0.12);
+    --verified: #34D399;
+    --verified-dim: rgba(52, 211, 153, 0.10);
+    --danger: #F87171;
+    --danger-dim: rgba(248, 113, 113, 0.10);
   }
 
   body {
-    background-color: var(--bg-primary);
+    background-color: var(--void);
     color: var(--text-primary);
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  code, pre, kbd {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* Display headings — Space Grotesk for technical character */
+  h1, h2, h3, h4 {
+    font-family: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+  }
+
+  /* Data surfaces — IBM Plex Mono, reserved strictly for code/data */
+  code, pre, kbd, .font-data {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }
 
-/* Crisp Enterprise Scrollbars */
+/* Quiet scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B0F17;
+  background: var(--void);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1E293B;
+  background: var(--wire);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--wire-strong);
+}
+
+/* Focus ring — visible, uses accent */
+*:focus-visible {
+  outline: 2px solid var(--iris);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
