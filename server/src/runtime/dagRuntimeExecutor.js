@@ -100,11 +100,11 @@ export class DagRuntimeExecutor {
     }
 
     // Finalize Transaction in SQLite
-    const finalStatus = context.isHalted ? "ROLLED_BACK" : "COMMITTED";
+    const finalStatus = context.isHalted ? "ROLLED_BACK" : (context.hasFailedStep ? "FAILED" : "COMMITTED");
     productionDb.updateTransactionStatus(txId, finalStatus, context.haltReason, 0);
 
     const completionEvent = {
-      type: context.isHalted ? "TRANSACTION_ROLLED_BACK" : "TRANSACTION_COMMITTED",
+      type: context.isHalted ? "TRANSACTION_ROLLED_BACK" : (context.hasFailedStep ? "TRANSACTION_FAILED" : "TRANSACTION_COMMITTED"),
       data: {
         id: txId,
         agentId: pipeline.id,
@@ -241,6 +241,7 @@ export class DagRuntimeExecutor {
       }
     } catch (err) {
       isSuccess = false;
+      context.hasFailedStep = true;
       output = { error: err.message, stack: err.stack };
       if (node.fallbackAction === "HALT_PIPELINE") {
         context.isHalted = true;
@@ -248,15 +249,24 @@ export class DagRuntimeExecutor {
       }
     }
 
-    // 3. Post-Execution Ground-Truth Contract Verification
+    if (output.verdict === "REJECTED" || output.status === "FAILED") {
+      isSuccess = false;
+      context.hasFailedStep = true;
+    }
+
+    // 3. Post-Execution Ground-Truth Contract Verification (for Actor/Action Nodes)
     let contractProof = null;
-    if (node.postcondition) {
+    if (archetype !== "VERIFIER_CRITIC" && node.postcondition) {
       const contractCheck = await contractEngine.verifyNodePostcondition(node, output);
       contractProof = {
         verifier: node.postcondition.verifier,
         verdict: contractCheck.verdict,
         proof: contractCheck.details || "Verified in local state"
       };
+      if (contractCheck.verdict !== "VERIFIED") {
+        isSuccess = false;
+        context.hasFailedStep = true;
+      }
     }
 
     const latencyMs = Number((performance.now() - startMs).toFixed(1));
@@ -278,14 +288,14 @@ export class DagRuntimeExecutor {
       output,
       contractProof,
       verdict: isSuccess ? "ALLOWED" : "FAILED",
-      verdictReason: isSuccess ? "Execution invariant satisfied" : output.error,
+      verdictReason: isSuccess ? "Execution invariant satisfied" : (output.error || output.reason || "Step failed ground-truth verification"),
       riskScore: computedRisk,
       status: isSuccess ? "COMPLETED" : "FAILED",
       latencyMs
     };
 
     productionDb.insertTransactionStep(context.txId, stepNumber, toolId, nodeParams, "no_op", {}, stepPayload.status);
-    productionDb.appendAuditBlock(context.pipelineId, toolId, stepPayload.verdict, stepPayload.verdictReason, computedRisk);
+    productionDb.appendAuditBlock(context.pipelineId, toolId, stepPayload.verdict, stepPayload.verdictReason || "Step recorded", computedRisk);
 
     this.broadcastEvent({ type: "PIPELINE_STEP", data: stepPayload });
   }
@@ -420,13 +430,15 @@ export class DagRuntimeExecutor {
       };
     }
 
+    const { _context, ...cleanParams } = params;
+
     return {
       tool: toolId,
       idempotencyKey,
       artifactFile: fileResult.filePath,
       artifactSha256: fileResult.sha256,
       result: "Tool executed successfully within sandbox constraints",
-      executedParameters: params
+      executedParameters: cleanParams
     };
   }
 
@@ -478,6 +490,7 @@ export class DagRuntimeExecutor {
     return {
       archetype: "VERIFIER_CRITIC",
       verdict: isVerified ? "VERIFIED" : "REJECTED",
+      status: isVerified ? "COMPLETED" : "FAILED",
       tier1DeterministicCheck: {
         verdict: tier1Check.verdict,
         proof: tier1Check.details || tier1Check.raw

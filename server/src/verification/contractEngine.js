@@ -9,12 +9,39 @@ export class DeterministicContractEngine {
     this.systemReaders = {
       // 1. Verify Database Row State
       db_row_exists: async (params) => {
-        const rows = productionDb.getTransactions();
-        const found = rows.some(r => r.id === params.txId || r.agentId === params.agentId);
-        return {
-          matches: found,
-          raw: { queriedTable: "transactions", recordFound: found, timestamp: new Date().toISOString() }
-        };
+        const table = params.table || "transactions";
+        const filter = params.filter || {};
+
+        try {
+          if (params.table && params.table !== "transactions") {
+            const filterKeys = Object.keys(filter);
+            let query = `SELECT * FROM ${table}`;
+            let values = [];
+            if (filterKeys.length > 0) {
+              const clauses = filterKeys.map(k => `${k} = ?`).join(" AND ");
+              query += ` WHERE ${clauses}`;
+              values = filterKeys.map(k => filter[k]);
+            }
+            const row = productionDb.db.prepare(query).get(...values);
+            const found = Boolean(row);
+            return {
+              matches: found,
+              raw: { queriedTable: table, filter, recordFound: found, row, timestamp: new Date().toISOString() }
+            };
+          }
+
+          const rows = productionDb.getTransactions();
+          const found = rows.some(r => r.id === params.txId || r.agentId === params.agentId);
+          return {
+            matches: found,
+            raw: { queriedTable: "transactions", recordFound: found, timestamp: new Date().toISOString() }
+          };
+        } catch (err) {
+          return {
+            matches: false,
+            raw: { queriedTable: table, error: err.message, timestamp: new Date().toISOString() }
+          };
+        }
       },
 
       // 2. Verify File SHA-256 Hash Ground Truth
@@ -71,7 +98,8 @@ export class DeterministicContractEngine {
     };
 
     const verifierFunc = this.systemReaders[postcondition.verifier] || this.systemReaders.db_row_exists;
-    const result = await verifierFunc(postcondition.params || {});
+    const mergedParams = { ...postcondition, ...(postcondition.params || {}) };
+    const result = await verifierFunc(mergedParams);
 
     const record = {
       nodeId: node.id || node.nodeId || "node_1",

@@ -1,0 +1,52 @@
+{
+  "tool": "issue_refund",
+  "idempotencyKey": "idem_1787261214422_465y",
+  "parameters": {
+    "customerId": "usr_101",
+    "amount": 25,
+    "_context": {
+      "txId": "tx_dag_1787261214414_d6o8",
+      "previousOutputs": {
+        "step_1_query": {
+          "archetype": "REASON_DECOMPOSE",
+          "thought": "Analyzing goal: \"Actor: Ingest Customer Profile\". Decomposing into execution graph...",
+          "plan": [
+            {
+              "phase": 1,
+              "action": "Inspect environment state",
+              "tool": "query_database"
+            },
+            {
+              "phase": 2,
+              "action": "Apply deterministic transformations",
+              "tool": "query_database"
+            },
+            {
+              "phase": 3,
+              "action": "Verify ground-truth outcome",
+              "verifier": "contract_check"
+            }
+          ],
+          "targetEntity": "production",
+          "extractedParameters": {
+            "table": "demo_users",
+            "filter": {
+              "id": "usr_101"
+            }
+          },
+          "status": "DECOMPOSED"
+        },
+        "step_2_policy": {
+          "archetype": "POLICY_GUARD",
+          "condition": "ALWAYS_EXECUTE",
+          "shouldProceed": true,
+          "conditionReason": "Condition passed.",
+          "fallbackAction": "HALT_PIPELINE",
+          "evaluatedAt": "2026-08-20T21:26:54.420Z"
+        }
+      }
+    }
+  },
+  "executedBy": "SandboxedEnvironmentEngine",
+  "timestamp": "2026-08-20T21:26:54.422Z"
+}

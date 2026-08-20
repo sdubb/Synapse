@@ -127,39 +127,93 @@ Provide your verdict in structured format:
       agentId
     };
 
+    const getCircularReplacer = () => {
+      const seen = new WeakSet();
+      return (key, value) => {
+        if (key === "_context") return undefined;
+        if (typeof value === "object" && value !== null) {
+          if (seen.has(value)) return "[Circular Reference]";
+          seen.add(value);
+        }
+        return value;
+      };
+    };
+
     const messages = [
       { role: "system", content: criticSystemPrompt },
-      { role: "user", content: `Please verify this execution outcome against physical ground-truth evidence:\n${JSON.stringify(inspectionPayload, null, 2)}` }
+      { role: "user", content: `Please verify this execution outcome against physical ground-truth evidence:\n${JSON.stringify(inspectionPayload, getCircularReplacer(), 2)}` }
     ];
 
-    const apiKey = process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || "synapse_local_single_key";
+    const apiKey = process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || "synapse_demo_key";
 
-    // 3. Make the single-API call (or deterministic model evaluator if offline/mock key)
-    let apiResponse;
-    const durationMs = Number((performance.now() - start).toFixed(2));
+    // 3. Outbound HTTP Request Metadata
+    const requestBody = {
+      model: this.model,
+      messages,
+      tools: this.readOnlyToolDefinitions,
+      temperature: 0.0
+    };
 
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const res = await fetch(this.apiEndpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: this.model,
-            messages,
-            tools: this.readOnlyToolDefinitions,
-            temperature: 0.0
-          })
-        });
-        apiResponse = await res.json();
-      } catch (err) {
-        console.warn(`[SINGLE_API_VERIFIER_WARN]: Live API call error: ${err.message}. Falling back to internal evaluator.`);
+    const requestHeaders = {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer [REDACTED_API_KEY]"
+    };
+
+    let apiResponse = null;
+    let liveNetworkMetadata = {
+      liveCallExecuted: false,
+      endpoint: this.apiEndpoint,
+      method: "POST",
+      headers: requestHeaders,
+      body: requestBody,
+      networkLatencyMs: 0
+    };
+
+    const netStart = performance.now();
+    try {
+      const res = await fetch(this.apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(5000)
+      });
+      const netLatencyMs = Number((performance.now() - netStart).toFixed(2));
+      const json = await res.json();
+
+      liveNetworkMetadata = {
+        liveCallExecuted: true,
+        endpoint: this.apiEndpoint,
+        method: "POST",
+        headers: requestHeaders,
+        body: requestBody,
+        statusCode: res.status,
+        statusText: res.statusText,
+        networkLatencyMs: netLatencyMs
+      };
+
+      if (res.ok && json.choices) {
+        apiResponse = json;
+      } else {
+        // Honest live cloud response (e.g. OpenAI 401 invalid API key)
+        liveNetworkMetadata.cloudError = json.error || `HTTP ${res.status} ${res.statusText}`;
       }
+    } catch (err) {
+      const netLatencyMs = Number((performance.now() - netStart).toFixed(2));
+      liveNetworkMetadata = {
+        liveCallExecuted: true,
+        endpoint: this.apiEndpoint,
+        method: "POST",
+        headers: requestHeaders,
+        body: requestBody,
+        error: err.message,
+        networkLatencyMs: netLatencyMs
+      };
     }
 
-    // High-fidelity structured evaluation if live cloud key not present
+    // High-fidelity structured evaluation if live cloud key rejected or unconfigured
     if (!apiResponse) {
       const isPassed = deterministicCheck?.verdict === "VERIFIED" || deterministicCheck?.matches === true;
       apiResponse = {
@@ -180,7 +234,6 @@ Provide your verdict in structured format:
             }
           }
         ],
-        usage: { prompt_tokens: 142, completion_tokens: 65, total_tokens: 207 }
       };
     }
 
@@ -191,13 +244,17 @@ Provide your verdict in structured format:
     } catch {
       parsedCritic = { verdict: "VERIFIED", rawContent: criticContent };
     }
+    const durationMs = Number((performance.now() - start).toFixed(2));
 
     return {
       tier: "TIER_2_SINGLE_KEY_ISOLATED",
       verifierType: "SINGLE_API_CRITIC",
       modelUsed: this.model,
       durationMs,
+      liveNetworkMetadata,
       requestPayload: {
+        endpoint: this.apiEndpoint,
+        headers: liveNetworkMetadata.headers,
         systemPrompt: criticSystemPrompt,
         messagesCount: messages.length,
         toolsProvided: this.readOnlyToolDefinitions.map(t => t.function.name)
