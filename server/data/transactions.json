@@ -1,0 +1,1078 @@
+[
+  {
+    "id": "tx_phase0_single_trace_1787235824063",
+    "agentId": "agy-cli-1.1.16",
+    "status": "ROLLED_BACK",
+    "startedAt": "2026-08-20T14:23:44.063Z",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "status": "COMPLETED",
+        "inverse": "no_op"
+      }
+    ],
+    "rollbackLog": {
+      "triggeredAt": "2026-08-20T14:23:48.151Z",
+      "reason": "Process PID 27872 terminated with signal SIGKILL",
+      "revertedSteps": 1,
+      "details": "State inverted on Step 1 (no_op compensation executed)."
+    }
+  },
+  {
+    "id": "tx_crash_test_01",
+    "agentId": "agy-cli-worker",
+    "status": "ROLLED_BACK",
+    "startedAt": "2026-08-20T14:23:39.616Z",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "status": "COMPLETED",
+        "inverse": "no_op"
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "amount": 150
+        },
+        "status": "COMPLETED",
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "amount": 150
+        }
+      }
+    ],
+    "rollbackLog": {
+      "triggeredAt": "2026-08-20T14:23:40.690Z",
+      "reason": "Process crashed/killed with signal SIGKILL (PID: 15572)",
+      "revertedSteps": 2,
+      "details": "Inverted 2 forward steps. Executed cancel_refund for $150.00."
+    }
+  },
+  {
+    "id": "tx_wf_0f4f04a9",
+    "agentId": "wf-sales-rep",
+    "agentName": "Autonomous Enterprise Account Executive (Sales)",
+    "goal": "Execute Full-Day Autonomous Pipeline: Autonomous Enterprise Account Executive (Sales)",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:53:39.694Z",
+    "ephemeralTokenId": "syn_eph_f9f3968d12669713fa9baf7d06fe0d47",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "company": "Cyberdyne Systems",
+          "budget": 75000,
+          "leadScore": 94
+        },
+        "inverse": {
+          "inverseTool": "revert_query_database",
+          "inverseParams": {
+            "stage": "Inbound Lead Qualification"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "SUCCESS_IN_VPC",
+          "stage": "Inbound Lead Qualification",
+          "details": {
+            "company": "Cyberdyne Systems",
+            "budget": 75000,
+            "leadScore": 94
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "update_salesforce_account",
+        "params": {
+          "account": "Cyberdyne Systems",
+          "stage": "Contracting",
+          "dealValue": 75000
+        },
+        "inverse": {
+          "inverseTool": "revert_update_salesforce_account",
+          "inverseParams": {
+            "stage": "Salesforce CRM Sync"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "SUCCESS_IN_VPC",
+          "stage": "Salesforce CRM Sync",
+          "details": {
+            "account": "Cyberdyne Systems",
+            "stage": "Contracting",
+            "dealValue": 75000
+          }
+        }
+      },
+      {
+        "step": 3,
+        "tool": "generate_contract_artifact",
+        "params": {
+          "discount": 20,
+          "terms": "Net-30"
+        },
+        "inverse": {
+          "inverseTool": "revert_generate_contract_artifact",
+          "inverseParams": {
+            "stage": "Draft Enterprise Contract"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "SUCCESS_IN_VPC",
+          "stage": "Draft Enterprise Contract",
+          "details": {
+            "discount": 20,
+            "terms": "Net-30"
+          }
+        }
+      },
+      {
+        "step": 4,
+        "tool": "a2a_delegate_task",
+        "params": {
+          "delegatee": "Finance-Agent-024",
+          "action": "generate_invoice",
+          "amount": 75000
+        },
+        "inverse": {
+          "inverseTool": "revert_a2a_delegate_task",
+          "inverseParams": {
+            "stage": "A2A Delegation to Finance Agent"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "SUCCESS_IN_VPC",
+          "stage": "A2A Delegation to Finance Agent",
+          "details": {
+            "delegatee": "Finance-Agent-024",
+            "action": "generate_invoice",
+            "amount": 75000
+          }
+        }
+      },
+      {
+        "step": 5,
+        "tool": "send_notification",
+        "params": {
+          "channel": "slack-revenue-execs"
+        },
+        "inverse": {
+          "inverseTool": "revert_send_notification",
+          "inverseParams": {
+            "stage": "Executive Revenue Summary"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "SUCCESS_IN_VPC",
+          "stage": "Executive Revenue Summary",
+          "details": {
+            "channel": "slack-revenue-execs"
+          }
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_phase0_single_trace_1787230157057",
+    "agentId": "agy-cli-1.1.16",
+    "status": "ROLLED_BACK",
+    "startedAt": "2026-08-20T12:49:17.057Z",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "status": "COMPLETED",
+        "inverse": "no_op"
+      }
+    ],
+    "rollbackLog": {
+      "triggeredAt": "2026-08-20T12:49:21.120Z",
+      "reason": "Process PID 31828 terminated with signal SIGKILL",
+      "revertedSteps": 1,
+      "details": "State inverted on Step 1 (no_op compensation executed)."
+    }
+  },
+  {
+    "id": "tx_crash_test_01",
+    "agentId": "agy-cli-worker",
+    "status": "ROLLED_BACK",
+    "startedAt": "2026-08-20T12:45:47.763Z",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "status": "COMPLETED",
+        "inverse": "no_op"
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "amount": 150
+        },
+        "status": "COMPLETED",
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "amount": 150
+        }
+      }
+    ],
+    "rollbackLog": {
+      "triggeredAt": "2026-08-20T12:45:48.812Z",
+      "reason": "Process crashed/killed with signal SIGKILL (PID: 8336)",
+      "revertedSteps": 2,
+      "details": "Inverted 2 forward steps. Executed cancel_refund for $150.00."
+    }
+  },
+  {
+    "id": "tx_task_8ec9df5e",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Audit our enterprise S3 bucket permissions, generate a compliance report for SOC2, and notify the security team on Slack",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:40:49.657Z",
+    "ephemeralTokenId": "syn_eph_74c34b0946ad9310db5404d58f022b41",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "repoTarget": "enterprise-monorepo",
+          "directive": "Audit our enterprise S3 bucket permissions, generate a compliance report for SOC2, and notify the security team on Slack"
+        },
+        "inverse": {
+          "inverseTool": "revert_query_database",
+          "inverseParams": {
+            "repoTarget": "enterprise-monorepo",
+            "directive": "Audit our enterprise S3 bucket permissions, generate a compliance report for SOC2, and notify the security team on Slack"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "COMPLETED_IN_VPC",
+          "stepResult": "Successfully executed query_database",
+          "parametersExecuted": {
+            "repoTarget": "enterprise-monorepo",
+            "directive": "Audit our enterprise S3 bucket permissions, generate a compliance report for SOC2, and notify the security team on Slack"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "manage_cloud_resources",
+        "params": {
+          "taskGoal": "Audit our enterprise S3 bucket permissions, generate a compliance report for SOC2, and notify the security team on Slack"
+        },
+        "inverse": {
+          "inverseTool": "revert_manage_cloud_resources",
+          "inverseParams": {
+            "taskGoal": "Audit our enterprise S3 bucket permissions, generate a compliance report for SOC2, and notify the security team on Slack"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "COMPLETED_IN_VPC",
+          "stepResult": "Successfully executed manage_cloud_resources",
+          "parametersExecuted": {
+            "taskGoal": "Audit our enterprise S3 bucket permissions, generate a compliance report for SOC2, and notify the security team on Slack"
+          }
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "cfo-ops@enterprise.com",
+          "summary": "Completed: Audit our enterprise S3 bucket permissions, generate a compl..."
+        },
+        "inverse": {
+          "inverseTool": "revert_send_notification",
+          "inverseParams": {
+            "recipient": "cfo-ops@enterprise.com",
+            "summary": "Completed: Audit our enterprise S3 bucket permissions, generate a compl..."
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "COMPLETED_IN_VPC",
+          "stepResult": "Successfully executed send_notification",
+          "parametersExecuted": {
+            "recipient": "cfo-ops@enterprise.com",
+            "summary": "Completed: Audit our enterprise S3 bucket permissions, generate a compl..."
+          }
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_60cbc722",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Execute Full-Day Autonomous Pipeline for Autonomous SOC Analyst & Threat Hunter (SecOps)",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:38:42.410Z",
+    "ephemeralTokenId": "syn_eph_7be539c28ac780f86321d562fde50033",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 150
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_3f359b",
+            "amount": 150
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_3f359b",
+          "amountRefunded": 150,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_wf_fb2a3f32",
+    "agentId": "wf-growth-marketing",
+    "agentName": "Autonomous AI Growth & Performance Marketer",
+    "goal": "Execute Full-Day Autonomous Pipeline: Autonomous AI Growth & Performance Marketer",
+    "status": "IN_PROGRESS",
+    "startedAt": "2026-08-20T12:38:40.602Z",
+    "ephemeralTokenId": "syn_eph_adf8ca367fe24029afaedca4dc22d8e6",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "metrics": [
+            "CAC",
+            "ROAS",
+            "CTR"
+          ],
+          "window": "past_24h"
+        },
+        "inverse": {
+          "inverseTool": "revert_query_database",
+          "inverseParams": {
+            "stage": "Query Real-Time Ad Performance"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "SUCCESS_IN_VPC",
+          "stage": "Query Real-Time Ad Performance",
+          "details": {
+            "metrics": [
+              "CAC",
+              "ROAS",
+              "CTR"
+            ],
+            "window": "past_24h"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "manage_cloud_resources",
+        "params": {
+          "shiftBudgetUsd": 15000,
+          "targetChannel": "Google Search High-Intent"
+        },
+        "inverse": {
+          "inverseTool": "revert_manage_cloud_resources",
+          "inverseParams": {
+            "stage": "Reallocate Campaign Ad Spend"
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "status": "SUCCESS_IN_VPC",
+          "stage": "Reallocate Campaign Ad Spend",
+          "details": {
+            "shiftBudgetUsd": 15000,
+            "targetChannel": "Google Search High-Intent"
+          }
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_3aec2458",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Execute Full-Day Autonomous Pipeline for Autonomous SOC Analyst & Threat Hunter (SecOps)",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:38:35.760Z",
+    "ephemeralTokenId": "syn_eph_379ebcf6d52f001ad86f894c20c5d9ba",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 150
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_72b84f",
+            "amount": 150
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_72b84f",
+          "amountRefunded": 150,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_8e482157",
+    "agentId": "agt-antigravity-sre",
+    "agentName": "Antigravity Autonomous Cloud SRE",
+    "goal": "Investigate degraded memory on Kubernetes node node-us-east-1b and execute zero-downtime container remediation.",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:31:21.983Z",
+    "ephemeralTokenId": "syn_eph_fc474ca9d5e97b824d696f3c1657a2b0",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 1
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_7e0a73",
+            "amount": 1
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_7e0a73",
+          "amountRefunded": 1,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_aa8d0ecb",
+    "agentId": "agt-antigravity-sre",
+    "agentName": "Antigravity Autonomous Cloud SRE",
+    "goal": "Investigate degraded memory on Kubernetes node node-us-east-1b and execute zero-downtime container remediation.",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:31:18.021Z",
+    "ephemeralTokenId": "syn_eph_7b6b1301b812367a9cbb06f8836b9fb5",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 1
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_e20417",
+            "amount": 1
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_e20417",
+          "amountRefunded": 1,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_d8a6e8a7",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Investigate customer Sarah Connor's account and issue an authorized $150.00 refund credit for order ord_501.",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:28:04.494Z",
+    "ephemeralTokenId": "syn_eph_b42019ac934333a48f85ea723a51ec08",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 150
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_535a90",
+            "amount": 150
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_535a90",
+          "amountRefunded": 150,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_b07040f4",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Investigate customer Sarah Connor's account and issue an authorized $150.00 refund credit for order ord_501.",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:28:02.436Z",
+    "ephemeralTokenId": "syn_eph_f17d1e3186196bc350df47642a59a50a",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 150
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_4fda76",
+            "amount": 150
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_4fda76",
+          "amountRefunded": 150,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_201fc514",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Customer loyalty review: request 350.00 account credit adjustment",
+    "status": "PAUSED_WAITING_HUMAN_APPROVAL",
+    "startedAt": "2026-08-20T12:21:29.993Z",
+    "ephemeralTokenId": "syn_eph_06150b9d225bfa015847c3df4f807f7d",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_3f73a11d",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Customer loyalty review: request .00 account credit adjustment for customer Sarah Connor",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:20:49.091Z",
+    "ephemeralTokenId": "syn_eph_9d6b753dc7cbf4ea14c522aa315a0d0b",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 0
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_d550b4",
+            "amount": 0
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_d550b4",
+          "amountRefunded": 0,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_055812a5",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Customer loyalty review: request .00 account credit adjustment for customer Sarah Connor",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:20:33.630Z",
+    "ephemeralTokenId": "syn_eph_30ed5af91cf502de56da8d5e9cc45dc1",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 150
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_d04346",
+            "amount": 150
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_d04346",
+          "amountRefunded": 150,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_06b54a62",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Customer loyalty review: request .00 account credit adjustment for customer Sarah Connor",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:20:13.011Z",
+    "ephemeralTokenId": "syn_eph_2bc71f06c135a13620217ad05e377a9f",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 150
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_f324af",
+            "amount": 150
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_f324af",
+          "amountRefunded": 150,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  }
+]

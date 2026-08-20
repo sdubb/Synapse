@@ -1,0 +1,1 @@
+{"name":"synapse-guard","version":"2.0.0","type":"module","bin":{"synapse-guard":"./bin/cli.js"},"scripts":{"start":"node bin/cli.js start","test":"node runFullE2ETest.js"}}

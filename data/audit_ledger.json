@@ -1,0 +1,68 @@
+[
+  {
+    "index": 6,
+    "timestamp": "2026-08-20T12:21:15.417Z",
+    "agentId": "agt-claude-finance",
+    "toolName": "send_notification",
+    "verdict": "ALLOWED",
+    "reason": "Zero PII leakage detected.",
+    "riskScore": 5,
+    "prevHash": "a6267a34aadfb7c3715d9e7112c56a5d6e81ceeefb44e97d758d77b9d688616d",
+    "hash": "2f797deac39a2bf47cfaec88f6011bd401956890ca5c0b9bce1ca72617af1483"
+  },
+  {
+    "index": 5,
+    "timestamp": "2026-08-20T12:21:14.797Z",
+    "agentId": "agt-claude-finance",
+    "toolName": "issue_refund",
+    "verdict": "ALLOWED",
+    "reason": "Passed all Rego invariants and shadow simulation.",
+    "riskScore": 5,
+    "prevHash": "9f8d0982336240bf085ed43c69db124c41445b0751b21449e8423eeef4c17718",
+    "hash": "a6267a34aadfb7c3715d9e7112c56a5d6e81ceeefb44e97d758d77b9d688616d"
+  },
+  {
+    "index": 4,
+    "timestamp": "2026-08-20T12:21:14.183Z",
+    "agentId": "agt-claude-finance",
+    "toolName": "query_database",
+    "verdict": "ALLOWED",
+    "reason": "Read query cleared by Rego policy [rego-spend-boundary].",
+    "riskScore": 5,
+    "prevHash": "85d0e53b5e14249e8d038f18bb0eab25f047f442409da78beb72ce646ae2659d",
+    "hash": "9f8d0982336240bf085ed43c69db124c41445b0751b21449e8423eeef4c17718"
+  },
+  {
+    "index": 3,
+    "timestamp": "2026-08-20T12:21:04.743Z",
+    "agentId": "agt-claude-finance",
+    "toolName": "send_notification",
+    "verdict": "ALLOWED",
+    "reason": "Zero PII leakage detected.",
+    "riskScore": 5,
+    "prevHash": "d446239dfd5890c7bca6839ff7a7a4117a39229454a788a688dc0155c89b5deb",
+    "hash": "85d0e53b5e14249e8d038f18bb0eab25f047f442409da78beb72ce646ae2659d"
+  },
+  {
+    "index": 2,
+    "timestamp": "2026-08-20T12:21:04.135Z",
+    "agentId": "agt-claude-finance",
+    "toolName": "issue_refund",
+    "verdict": "ALLOWED",
+    "reason": "Passed all Rego invariants and shadow simulation.",
+    "riskScore": 5,
+    "prevHash": "76d1e20d1a643e1e825f611a5caa68ad1970d100dc8301b99e0ac3acc3fc0d98",
+    "hash": "d446239dfd5890c7bca6839ff7a7a4117a39229454a788a688dc0155c89b5deb"
+  },
+  {
+    "index": 1,
+    "timestamp": "2026-08-20T12:21:03.519Z",
+    "agentId": "agt-claude-finance",
+    "toolName": "query_database",
+    "verdict": "ALLOWED",
+    "reason": "Read query cleared by Rego policy [rego-spend-boundary].",
+    "riskScore": 5,
+    "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "hash": "76d1e20d1a643e1e825f611a5caa68ad1970d100dc8301b99e0ac3acc3fc0d98"
+  }
+]

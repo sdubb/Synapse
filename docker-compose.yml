@@ -1,0 +1,29 @@
+﻿version: '3.8'
+
+services:
+  synapse-control-plane:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: synapse-control-plane
+    restart: unless-stopped
+    ports:
+      - "4000:4000"  # Control Plane HTTP REST & WebSocket API
+      - "4005:4005"  # Universal FAANG Model Context Protocol (MCP) Server
+      - "4002:4002"  # Remote Machine Multi-Node Ingress Gateway
+    volumes:
+      # Persist SQLite WAL Merkle database across container upgrades
+      - synapse-data:/app/server/data
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - OPA_STRICT_MODE=true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/v1/stats"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  synapse-data:
+    driver: local

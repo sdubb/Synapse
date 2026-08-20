@@ -1,0 +1,20 @@
+[
+  {
+    "approvalId": "appr_7c90de72",
+    "txId": "tx_201fc514",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "toolName": "issue_refund",
+    "parameters": {
+      "customerId": "usr_101",
+      "orderId": "ord_501",
+      "amount": 350
+    },
+    "reason": "APPROVAL REQUIRED [rego-spend-boundary]: Amount ($350.00) is between $300.00 and $500.00. Held for Human On-Call Approval.",
+    "riskScore": 55,
+    "status": "PENDING",
+    "createdAt": "2026-08-20T12:21:31.117Z",
+    "decidedAt": null,
+    "decidedBy": null
+  }
+]

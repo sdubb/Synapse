@@ -1,0 +1,148 @@
+[
+  {
+    "id": "tx_8802b1d9",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Customer loyalty review: request .00 account credit adjustment for customer Sarah Connor",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:21:13.672Z",
+    "ephemeralTokenId": "syn_eph_95adb6db79b558c4658bd920f66dc28b",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 0
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_2b36ab",
+            "amount": 0
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_2b36ab",
+          "amountRefunded": 0,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  },
+  {
+    "id": "tx_852423a9",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "goal": "Customer loyalty review: request .00 account credit adjustment for customer Sarah Connor",
+    "status": "COMMITTED",
+    "startedAt": "2026-08-20T12:21:03.004Z",
+    "ephemeralTokenId": "syn_eph_a7f9fc1eaa7b9f0314bc58ae55afa92c",
+    "steps": [
+      {
+        "step": 1,
+        "tool": "query_database",
+        "params": {
+          "table": "customers",
+          "filter": {
+            "id": "usr_101"
+          }
+        },
+        "inverse": "no_op",
+        "status": "COMPLETED",
+        "output": {
+          "customer": {
+            "id": "usr_101",
+            "name": "Sarah Connor",
+            "balance": 450,
+            "tier": "Enterprise"
+          },
+          "order": {
+            "id": "ord_501",
+            "amount": 150,
+            "status": "PAID"
+          }
+        }
+      },
+      {
+        "step": 2,
+        "tool": "issue_refund",
+        "params": {
+          "customerId": "usr_101",
+          "orderId": "ord_501",
+          "amount": 0
+        },
+        "inverse": {
+          "inverseTool": "cancel_refund",
+          "inverseParams": {
+            "refundId": "ref_1ccef4",
+            "amount": 0
+          }
+        },
+        "status": "COMPLETED",
+        "output": {
+          "refundId": "ref_1ccef4",
+          "amountRefunded": 0,
+          "status": "COMPLETED_IN_VPC",
+          "customerBalanceAfter": 600
+        }
+      },
+      {
+        "step": 3,
+        "tool": "send_notification",
+        "params": {
+          "recipient": "sarah@cyberdyne.io",
+          "subject": "Refund Confirmed"
+        },
+        "status": "COMPLETED",
+        "output": {
+          "delivered": true,
+          "messageId": "msg_9921"
+        }
+      }
+    ],
+    "rollbackLog": null
+  }
+]

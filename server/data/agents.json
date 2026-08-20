@@ -1,0 +1,58 @@
+[
+  {
+    "id": "agt-claude-finance",
+    "name": "Financial Treasury & Billing Worker",
+    "provider": "Anthropic Claude 3.5 Sonnet",
+    "department": "Finance & Accounting",
+    "owner": "cfo-ops@enterprise.com",
+    "status": "ACTIVE",
+    "securityScore": 88,
+    "spendCeilingUsd": 500,
+    "requiresHitlAboveUsd": 300,
+    "allowedTools": [
+      "query_database",
+      "issue_refund",
+      "send_notification"
+    ],
+    "systemPrompt": "You are an autonomous treasury reconciler. Verify invoice balances before issuing refunds.",
+    "tasksCount": 142,
+    "lastAudit": "Today, 10:30 AM"
+  },
+  {
+    "id": "agt-antigravity-sre",
+    "name": "Antigravity Autonomous Cloud SRE",
+    "provider": "Google Antigravity / Gemini",
+    "department": "Cloud Infrastructure",
+    "owner": "sre-lead@enterprise.com",
+    "status": "ACTIVE",
+    "securityScore": 92,
+    "spendCeilingUsd": 2000,
+    "requiresHitlAboveUsd": 1000,
+    "allowedTools": [
+      "manage_cloud_resources",
+      "query_database",
+      "send_notification"
+    ],
+    "systemPrompt": "You are an autonomous SRE agent. Continuously monitor node health and execute remediation.",
+    "tasksCount": 389,
+    "lastAudit": "Today, 11:15 AM"
+  },
+  {
+    "id": "agt-salesforce-crm",
+    "name": "Salesforce Agentforce Support Bot",
+    "provider": "Salesforce Agentforce (Atlas)",
+    "department": "Customer Service",
+    "owner": "support-head@enterprise.com",
+    "status": "ACTIVE",
+    "securityScore": 95,
+    "spendCeilingUsd": 250,
+    "requiresHitlAboveUsd": 150,
+    "allowedTools": [
+      "query_database",
+      "send_notification"
+    ],
+    "systemPrompt": "You are a customer support agent. Resolve queries while redacting PII.",
+    "tasksCount": 1204,
+    "lastAudit": "Today, 09:00 AM"
+  }
+]

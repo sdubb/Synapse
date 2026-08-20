@@ -1,0 +1,26 @@
+[
+  {
+    "id": "rego-spend-boundary",
+    "name": "Tri-State Financial Boundary Policy",
+    "category": "Financial Compliance",
+    "regoCode": "package synapse.finance\ndefault allow = false\nallow { input.amount <= input.agent.spendCeilingUsd }\nrequires_approval { input.amount > input.agent.requiresHitlAboveUsd; input.amount <= input.agent.spendCeilingUsd }",
+    "description": "Evaluates financial amounts: Auto-Allows below threshold, triggers Human Approval if between $300-$500, and Auto-Blocks above $500.",
+    "enabled": true
+  },
+  {
+    "id": "rego-sequence-invariant",
+    "name": "Compound Evasion & Privilege Escalation Invariant",
+    "category": "Security Invariants",
+    "regoCode": "package synapse.security\ndefault allow = true\ndeny { input.session_trajectory[_].tool == \"disable_audit\"; input.tool == \"bulk_delete\" }",
+    "description": "Blocks an agent from deleting records if audit logging was disabled earlier in the same session.",
+    "enabled": true
+  },
+  {
+    "id": "rego-zero-destruction",
+    "name": "Zero-Destruction Cloud Infrastructure Invariant",
+    "category": "Infrastructure SRE",
+    "regoCode": "package synapse.infra\ndefault allow = true\ndeny { re_match(\"DROP|TRUNCATE|terminate_all\", input.query_or_command) }",
+    "description": "Catches catastrophic database drops or cluster terminates in the speculative shadow sandbox.",
+    "enabled": true
+  }
+]
