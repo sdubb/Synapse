@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { productionDb } from "../storage/productionDb.js";
 import { realRegoEvaluator } from "../policy/realRegoEvaluator.js";
 import { contractEngine } from "../verification/contractEngine.js";
+import { singleApiCriticVerifier } from "../verification/singleApiCriticVerifier.js";
 import { a2aMeshEngine } from "../a2a/googleA2AMesh.js";
 import { slackDispatcher } from "../slack/slackDispatcher.js";
 import { sandboxedEnvironmentEngine } from "./sandboxedEnvironmentEngine.js";
@@ -460,13 +461,36 @@ export class DagRuntimeExecutor {
   }
 
   async _executeVerifierCritic(node, params, context) {
-    const check = await contractEngine.verifyNodePostcondition(node, context.state);
+    // 1. Execute Tier 1 deterministic ground-truth verification first
+    const tier1Check = await contractEngine.verifyNodePostcondition(node, context.state);
+    
+    // 2. Execute Tier 2 Single-API Adversarial Critic Verifier
+    const criticResult = await singleApiCriticVerifier.verifyStepOutcome({
+      node,
+      claimedOutput: context.state,
+      txId: context.txId,
+      agentId: context.pipelineId,
+      tier1Evidence: tier1Check
+    });
+
+    const isVerified = tier1Check.verdict === "VERIFIED" && criticResult.parsedVerdict?.verdict !== "REJECTED";
+
     return {
       archetype: "VERIFIER_CRITIC",
-      verdict: check.verdict,
-      proof: check.details,
-      confidence: check.verdict === "VERIFIED" ? 1.0 : 0.4,
-      verifiedAgainst: "SQLite Merkle State & Synthetic Probes"
+      verdict: isVerified ? "VERIFIED" : "REJECTED",
+      tier1DeterministicCheck: {
+        verdict: tier1Check.verdict,
+        proof: tier1Check.details || tier1Check.raw
+      },
+      tier2CriticVerification: {
+        tier: criticResult.tier,
+        model: criticResult.modelUsed,
+        verdict: criticResult.parsedVerdict?.verdict,
+        confidence: criticResult.parsedVerdict?.confidence,
+        reasoning: criticResult.parsedVerdict?.reasoning
+      },
+      confidence: isVerified ? 0.98 : 0.2,
+      verifiedAgainst: "SQLite Merkle State & Single-API Adversarial Critic"
     };
   }
 

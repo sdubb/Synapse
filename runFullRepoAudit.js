@@ -258,6 +258,11 @@ const auditMap = {
   "server/src/verification/verifierMcpClient.js": {
     classification: "REAL",
     justification: "JSON-RPC client communicating with MCP gateway with honest error propagation (no fake CONFIRMED_VIA_MCP fallbacks)."
+  },
+  // 50. Single API Critic Verifier
+  "server/src/verification/singleApiCriticVerifier.js": {
+    classification: "REAL",
+    justification: "Single-API isolated-context adversarial critic verifier with structurally enforced read-only toolsets (0 extra CLIs/subscriptions)."
   }
 };
 
