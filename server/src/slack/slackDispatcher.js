@@ -1,4 +1,4 @@
-﻿import http from "http";
+import http from "http";
 import { productionDb } from "../storage/productionDb.js";
 import { realSecretsVault } from "../secrets/realSecretsVault.js";
 
@@ -59,20 +59,45 @@ export class SlackBlockKitDispatcher {
 
     // If a real webhook URL exists, post to Slack
     if (this.webhookUrl) {
+      const start = performance.now();
       try {
         const response = await fetch(this.webhookUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-        console.log(`[SLACK_BLOCK_KIT_DISPATCH]: Real Slack message posted. Status: ${response.status}`);
-        return { success: true, status: response.status };
+        const latencyMs = Number((performance.now() - start).toFixed(2));
+        console.log(`[SLACK_BLOCK_KIT_DISPATCH]: Real Slack message posted. Status: ${response.status} (${latencyMs}ms)`);
+        return {
+          delivered: response.ok,
+          channel: "slack_webhook",
+          isFallback: false,
+          statusCode: response.status,
+          latencyMs,
+          message: response.ok ? "Notification delivered to live Slack webhook endpoint." : `Slack endpoint responded with error: ${response.statusText}`
+        };
       } catch (err) {
+        const latencyMs = Number((performance.now() - start).toFixed(2));
         console.error("[SLACK_BLOCK_KIT_DISPATCH]: Failed to post to webhook:", err.message);
+        return {
+          delivered: false,
+          channel: "slack_webhook",
+          isFallback: false,
+          statusCode: null,
+          latencyMs,
+          error: `Network error posting to Slack: ${err.message}`
+        };
       }
     }
 
-    return { success: true, notice: "Slack Block-Kit payload formatted and logged." };
+    return {
+      delivered: false,
+      channel: "console_fallback",
+      isFallback: true,
+      statusCode: null,
+      message: "No SLACK_WEBHOOK_URL configured. Interactive Block-Kit notification logged to console only.",
+      payload
+    };
   }
 }
 

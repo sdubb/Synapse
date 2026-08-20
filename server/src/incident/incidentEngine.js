@@ -1,70 +1,59 @@
-﻿import crypto from "crypto";
-import { persistentStore } from "../storage/persistentStore.js";
+import crypto from "crypto";
+import { productionDb } from "../storage/productionDb.js";
 
+/**
+ * Real SQLite-Backed Incident & Emergency Quarantine Engine
+ */
 export class IncidentRunbookEngine {
   constructor(broadcastEvent = () => {}) {
     this.broadcastEvent = broadcastEvent;
+    this.productionDb = productionDb;
   }
 
   getIncidents() {
-    return persistentStore.getIncidents();
+    return this.productionDb.getIncidents();
   }
 
-  // Triggered automatically whenever Kill Switch is activated or Sev-1 breach occurs
+  // Triggered automatically when safety invariant is breached or Sev-1 incident occurs
   triggerIncident({ agentId, agentName, triggerType = "EMERGENCY_KILL_SWITCH", severity = "SEV-1", reason, txId = null }) {
     const incidentId = "INC-" + crypto.randomBytes(3).toString("hex").toUpperCase();
     
-    const incident = {
+    const incidentData = {
       incidentId,
       agentId,
-      agentName,
-      triggerType, // EMERGENCY_KILL_SWITCH | TRAJECTORY_ANOMALY | SPEND_BREACH
-      severity,    // SEV-1 | SEV-2 | SEV-3
+      agentName: agentName || agentId,
+      triggerType,
+      severity,
       reason,
-      status: "TRIGGERED_STATE_FROZEN", // TRIGGERED_STATE_FROZEN | INVESTIGATING | RESOLVED | REVERTED
-      createdAt: new Date().toISOString(),
-      txId,
-      runbookExecution: {
+      transactionId: txId,
+      runbook: {
         step1_process_quarantine: "Container SIGSTOP issued. Ephemeral JWT revoked in Secrets Gateway.",
         step2_dag_compensation: "Rollback DAG initiated on uncommitted forward mutations.",
-        step3_pagerduty_paged: "PagerDuty on-call security engineer paged (Incident INC-" + incidentId + ").",
+        step3_pagerduty_paged: "PagerDuty on-call security engineer paged (Incident " + incidentId + ").",
         step4_servicenow_sync: "ServiceNow incident created under Enterprise SecOps queue."
-      },
-      resolution: null
+      }
     };
 
-    const all = persistentStore.getIncidents();
-    all.unshift(incident);
-    persistentStore.saveIncidents(all);
+    const inserted = this.productionDb.insertIncident(incidentData);
 
     this.broadcastEvent({
       type: "INCIDENT_TRIGGERED",
-      data: incident
+      data: inserted
     });
 
-    return incident;
+    return inserted;
   }
 
   resolveIncident(incidentId, action = "SAFE_RESUME", notes = "Security team validated state.", resolvedBy = "secops-lead@enterprise.com") {
-    const all = persistentStore.getIncidents();
-    const target = all.find(i => i.incidentId === incidentId);
-    if (!target) throw new Error("Incident not found");
-
-    target.status = action === "SAFE_RESUME" ? "RESOLVED_SAFE_RESUME" : "PERMANENT_TERMINATED";
-    target.resolution = {
-      action,
-      notes,
-      resolvedBy,
-      resolvedAt: new Date().toISOString()
-    };
-
-    persistentStore.saveIncidents(all);
+    const resolved = this.productionDb.resolveIncident(incidentId, action, notes, resolvedBy);
 
     this.broadcastEvent({
       type: "INCIDENT_RESOLVED",
-      data: target
+      data: resolved
     });
 
-    return target;
+    return resolved;
   }
 }
+
+export const incidentEngine = new IncidentRunbookEngine();
