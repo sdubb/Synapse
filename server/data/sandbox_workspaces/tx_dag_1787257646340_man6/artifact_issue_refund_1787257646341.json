@@ -1,0 +1,14 @@
+{
+  "tool": "issue_refund",
+  "idempotencyKey": "idem_1787257646341_ci92",
+  "parameters": {
+    "amount": 450,
+    "reason": "Customer dispute",
+    "_context": {
+      "txId": "tx_dag_1787257646340_man6",
+      "previousOutputs": {}
+    }
+  },
+  "executedBy": "SandboxedEnvironmentEngine",
+  "timestamp": "2026-08-20T20:27:26.341Z"
+}

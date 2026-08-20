@@ -143,6 +143,23 @@ export class SandboxedEnvironmentEngine {
   }
 
   /**
+   * Explicit stub for external K8s cluster actions when no live cluster is connected
+   */
+  stubExecuteK8sDrain(cluster, service, params = {}) {
+    console.log(`⚠️ STUB: no live K8s cluster configured (cluster: '${cluster}', service: '${service}'), simulating result`);
+    return {
+      isStub: true,
+      stubNotice: "STUB: no live K8s cluster configured, simulating result",
+      tool: "k8s_cluster_drain_restart",
+      cluster: cluster || "local-stub-cluster",
+      service: service || "default-service",
+      action: "DRAIN_AND_RESTART",
+      status: "SIMULATED_SUCCESS",
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
    * Cleans up a session workspace
    */
   cleanupWorkspace(sessionId) {

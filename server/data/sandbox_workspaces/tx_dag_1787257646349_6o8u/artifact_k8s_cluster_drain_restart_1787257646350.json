@@ -1,0 +1,14 @@
+{
+  "tool": "k8s_cluster_drain_restart",
+  "idempotencyKey": "idem_1787257646350_5vwm",
+  "parameters": {
+    "cluster": "prod-us-east-1",
+    "service": "checkout-api",
+    "_context": {
+      "txId": "tx_dag_1787257646349_6o8u",
+      "previousOutputs": {}
+    }
+  },
+  "executedBy": "SandboxedEnvironmentEngine",
+  "timestamp": "2026-08-20T20:27:26.350Z"
+}

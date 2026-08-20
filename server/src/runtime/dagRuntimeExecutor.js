@@ -264,6 +264,8 @@ export class DagRuntimeExecutor {
     context.nodeOutputs[node.id || `node_${stepNumber}`] = output;
     context.state = { ...context.state, ...output };
 
+    const computedRisk = (typeof opaVerdict.riskScore === "number") ? opaVerdict.riskScore : (isSuccess ? 5.0 : 75.0);
+
     const stepPayload = {
       txId: context.txId,
       stepNumber,
@@ -276,13 +278,13 @@ export class DagRuntimeExecutor {
       contractProof,
       verdict: isSuccess ? "ALLOWED" : "FAILED",
       verdictReason: isSuccess ? "Execution invariant satisfied" : output.error,
-      riskScore: isSuccess ? 5 : 65,
+      riskScore: computedRisk,
       status: isSuccess ? "COMPLETED" : "FAILED",
       latencyMs
     };
 
     productionDb.insertTransactionStep(context.txId, stepNumber, toolId, nodeParams, "no_op", {}, stepPayload.status);
-    productionDb.appendAuditBlock(context.pipelineId, toolId, stepPayload.verdict, stepPayload.verdictReason, stepPayload.riskScore);
+    productionDb.appendAuditBlock(context.pipelineId, toolId, stepPayload.verdict, stepPayload.verdictReason, computedRisk);
 
     this.broadcastEvent({ type: "PIPELINE_STEP", data: stepPayload });
   }
@@ -396,17 +398,12 @@ export class DagRuntimeExecutor {
         timestamp: new Date().toISOString()
       };
     } else if (toolId.includes("k8s") || toolId.includes("drain")) {
+      const stubResult = sandboxedEnvironmentEngine.stubExecuteK8sDrain(params.cluster, params.service, params);
       return {
-        tool: toolId,
-        cluster: params.cluster || "prod-us-east-1",
-        service: params.service || "checkout-api",
-        action: "DRAIN_AND_RESTART",
-        podsRestarted: 3,
-        canaryHealthScore: 1.0,
+        ...stubResult,
         artifactFile: fileResult.filePath,
         artifactSha256: fileResult.sha256,
-        idempotencyKey,
-        status: "ZERO_DOWNTIME_SUCCESS"
+        idempotencyKey
       };
     } else if (toolId.includes("sap") || toolId.includes("reconcile") || toolId.includes("ledger")) {
       return {

@@ -1,0 +1,14 @@
+{
+  "tool": "query_database",
+  "idempotencyKey": "idem_1787257646329_7loq",
+  "parameters": {
+    "query": "SELECT 1",
+    "amount": 50,
+    "_context": {
+      "txId": "tx_dag_1787257646323_1v6j",
+      "previousOutputs": {}
+    }
+  },
+  "executedBy": "SandboxedEnvironmentEngine",
+  "timestamp": "2026-08-20T20:27:26.329Z"
+}
