@@ -1,7 +1,8 @@
-﻿import { spawn } from "child_process";
+import { spawn } from "child_process";
 import path from "path";
 import { productionDb } from "../storage/productionDb.js";
 import { realRegoEvaluator } from "../policy/realRegoEvaluator.js";
+import { sandboxedEnvironmentEngine } from "./sandboxedEnvironmentEngine.js";
 
 // Multi-CLI Driver Registry supporting agy, aider, openhands, goose, cline, and native node
 export class UniversalCliRuntimeManager {
@@ -97,70 +98,67 @@ export class UniversalCliRuntimeManager {
       "COMPLETED"
     );
 
-    // 3. Spawn the Actual Chosen CLI Subprocess
+    // 3. Spawn the Actual Chosen CLI Subprocess via SandboxedEnvironmentEngine
     const cmdArgs = driver.buildCommand(goal, model);
-    let childProcess;
-    let pid = Math.floor(10000 + Math.random() * 50000);
+    const procResult = await sandboxedEnvironmentEngine.executeSubprocess(driver.binaryName, cmdArgs, {
+      timeoutMs: 15000
+    });
 
-    try {
-      childProcess = spawn(driver.binaryName, cmdArgs, {
-        shell: true,
-        env: {
-          ...process.env,
-          SYNAPSE_MCP_GATEWAY: "http://localhost:4005",
-          SYNAPSE_SPEND_CEILING: spendCeilingUsd.toString()
-        }
-      });
-
-      if (childProcess.pid) pid = childProcess.pid;
-      console.log(`[PROCESS_SPAWNED]: Live OS Subprocess '${driver.name}' running with PID: ${pid}`);
-    } catch (err) {
-      console.log(`[PROCESS_NOTICE]: Spawn handled via driver fallback. PID: ${pid}`);
-    }
+    const isSuccess = procResult.exitCode === 0;
+    const pid = procResult.pid || null;
 
     // 4. Record Step in SQLite DB
     productionDb.insertTransactionStep(
       txId,
       2,
       `execute_${driver.id}_process`,
-      { binary: driver.binaryName, pid, goal, model },
+      { binary: driver.binaryName, pid, goal, model, exitCode: procResult.exitCode },
       "kill_process",
       { pid },
-      "COMPLETED"
+      isSuccess ? "COMPLETED" : "FAILED"
     );
 
     productionDb.appendAuditBlock(
       agentId,
       `cli_execute_${driver.id}`,
-      "ALLOWED",
-      `Launched open-source CLI '${driver.name}' (PID: ${pid}) under Synapse governance.`,
-      10
+      isSuccess ? "ALLOWED" : "FAILED",
+      isSuccess ? `Executed CLI '${driver.name}' (PID: ${pid}) successfully.` : `CLI '${driver.name}' exited with error: ${procResult.stderr || "non-zero exit"}`,
+      isSuccess ? 10 : 60
     );
 
     const stepResult = {
       step: 2,
       title: `Step 2: Executed via ${driver.name}`,
-      thought: `Spawning ${driver.name} with command args [${cmdArgs.join(" ")}]. Process supervised under PID ${pid}.`,
-      verdict: "ALLOWED",
+      thought: `Spawned ${driver.name} with args [${cmdArgs.join(" ")}]. Process exited with code ${procResult.exitCode} in ${procResult.latencyMs}ms.`,
+      verdict: isSuccess ? "ALLOWED" : "FAILED",
       pid,
+      exitCode: procResult.exitCode,
+      stdout: procResult.stdout,
+      stderr: procResult.stderr,
+      latencyMs: procResult.latencyMs,
       cli: driver.name
     };
 
     this.broadcastEvent({ type: "PIPELINE_STEP", data: stepResult });
 
     // 5. Commit Completed State
-    productionDb.updateTransactionStatus(txId, "COMMITTED", null, 0);
+    const finalStatus = isSuccess ? "COMMITTED" : "FAILED";
+    productionDb.updateTransactionStatus(txId, finalStatus, isSuccess ? null : procResult.stderr, 0);
     this.broadcastEvent({
-      type: "TRANSACTION_COMMITTED",
-      data: { id: txId, agentId, goal, status: "COMMITTED", pid, cli: driver.name }
+      type: isSuccess ? "TRANSACTION_COMMITTED" : "TRANSACTION_ROLLED_BACK",
+      data: { id: txId, agentId, goal, status: finalStatus, pid, cli: driver.name }
     });
 
     return {
-      success: true,
+      success: isSuccess,
       txId,
-      cli: driver.name,
       pid,
-      message: `✅ CLI Execution Launched: Supervised '${driver.name}' (PID: ${pid}) attached to Synapse MCP Gateway on port 4005.`
+      exitCode: procResult.exitCode,
+      stdout: procResult.stdout,
+      stderr: procResult.stderr,
+      latencyMs: procResult.latencyMs,
+      cli: driver.name,
+      message: isSuccess ? `CLI '${driver.name}' completed successfully.` : `CLI '${driver.name}' execution failed.`
     };
   }
 }
