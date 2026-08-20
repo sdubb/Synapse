@@ -40,6 +40,19 @@ export class ProductionDatabase {
           });
         }
       }
+
+      // Seed demo_users and demo_orders if empty
+      const userCount = this.db.prepare("SELECT count(*) as cnt FROM demo_users").get()?.cnt || 0;
+      if (userCount === 0) {
+        const insertUser = this.db.prepare("INSERT INTO demo_users (id, name, email, balance, tier) VALUES (?, ?, ?, ?, ?)");
+        insertUser.run("usr_101", "Sarah Connor", "sarah@cyberdyne.io", 450.0, "enterprise");
+        insertUser.run("usr_102", "John Wick", "john@continental.org", 12500.0, "vip");
+        insertUser.run("usr_103", "Dev Employee", "dev@company.com", 50.0, "internal");
+
+        const insertOrder = this.db.prepare("INSERT INTO demo_orders (id, user_id, amount, status, description) VALUES (?, ?, ?, ?, ?)");
+        insertOrder.run("ord_501", "usr_101", 150.0, "paid", "Cloud Cluster Tier A");
+        insertOrder.run("ord_502", "usr_102", 8500.0, "paid", "Dedicated GPU SuperPOD");
+      }
     } catch (e) {
       console.error("Auto-seed error:", e);
     }
@@ -166,6 +179,26 @@ export class ProductionDatabase {
         governance_verdict TEXT NOT NULL,
         governance_reason TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- 7b. Sandbox Enterprise Schema (Real SQLite Storage for sandboxTools.js)
+      CREATE TABLE IF NOT EXISTS demo_users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        balance REAL DEFAULT 0.0,
+        tier TEXT DEFAULT 'standard',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS demo_orders (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        amount REAL NOT NULL,
+        status TEXT NOT NULL,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES demo_users(id)
       );
 
       -- 8. Visual Multi-Stage Pipeline Storage & Revisions

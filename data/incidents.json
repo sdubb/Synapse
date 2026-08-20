@@ -1,0 +1,43 @@
+[
+  {
+    "incidentId": "INC-88A92F",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "triggerType": "SPEND_BREACH",
+    "severity": "SEV-1",
+    "reason": "Rogue multi-step loop attempted unauthorized $6,400.00 refund without 2FA.",
+    "status": "TRIGGERED_STATE_FROZEN",
+    "createdAt": "2026-08-20T20:45:15.129Z",
+    "txId": "tx_5b7ef5ee",
+    "runbookExecution": {
+      "step1_process_quarantine": "Container SIGSTOP issued. Ephemeral JWT revoked in Secrets Gateway.",
+      "step2_dag_compensation": "Rollback DAG initiated on uncommitted forward mutations.",
+      "step3_pagerduty_paged": "PagerDuty on-call security engineer paged (Incident INC-88A92F).",
+      "step4_servicenow_sync": "ServiceNow incident created under Enterprise SecOps queue."
+    },
+    "resolution": null
+  },
+  {
+    "incidentId": "INC-33B10C",
+    "agentId": "agt-antigravity-sre",
+    "agentName": "Antigravity Autonomous Cloud SRE",
+    "triggerType": "EMERGENCY_KILL_SWITCH",
+    "severity": "SEV-2",
+    "reason": "Manual safety freeze triggered during production database schema migration.",
+    "status": "RESOLVED_SAFE_RESUME",
+    "createdAt": "2026-08-20T18:57:15.129Z",
+    "txId": "tx_node_migrate_01",
+    "runbookExecution": {
+      "step1_process_quarantine": "Container SIGSTOP issued. Ephemeral JWT revoked.",
+      "step2_dag_compensation": "Rollback DAG compensated 2 forward migration steps.",
+      "step3_pagerduty_paged": "Incident triaged with SRE on-call team.",
+      "step4_servicenow_sync": "Audit ticket updated to CLOSED."
+    },
+    "resolution": {
+      "action": "SAFE_RESUME",
+      "notes": "Database snapshot validated by Lead DBA. Container unpaused.",
+      "resolvedBy": "dba-lead@enterprise.com",
+      "resolvedAt": "2026-08-20T19:27:15.129Z"
+    }
+  }
+]

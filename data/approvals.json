@@ -1,0 +1,40 @@
+[
+  {
+    "approvalId": "appr_9921fa",
+    "txId": "tx_fec02771",
+    "agentId": "agt-claude-finance",
+    "agentName": "Financial Treasury & Billing Worker",
+    "toolName": "issue_refund",
+    "parameters": {
+      "customerId": "usr_101",
+      "orderId": "ord_501",
+      "amount": 350,
+      "currency": "USD",
+      "reason": "Customer Loyalty Retention Bonus"
+    },
+    "reason": "APPROVAL REQUIRED [rego-spend-boundary]: Amount ($350.00) exceeds autonomous threshold ($300.00). Held for On-Call SecOps Approval.",
+    "riskScore": 55,
+    "status": "PENDING",
+    "createdAt": "2026-08-20T20:53:15.126Z",
+    "decidedAt": null,
+    "decidedBy": null
+  },
+  {
+    "approvalId": "appr_8812bb",
+    "txId": "tx_abc8921",
+    "agentId": "agt-salesforce-crm",
+    "agentName": "Salesforce Agentforce Support Bot",
+    "toolName": "update_salesforce_account",
+    "parameters": {
+      "accountId": "0015g00000XyZ1",
+      "discountPercentage": 40,
+      "creditLimitAdjustment": 15000
+    },
+    "reason": "APPROVAL REQUIRED [rego-spend-boundary]: Credit adjustment $15,000 exceeds standard CRM agent tier limit.",
+    "riskScore": 65,
+    "status": "APPROVED",
+    "createdAt": "2026-08-20T20:12:15.128Z",
+    "decidedAt": "2026-08-20T20:17:15.128Z",
+    "decidedBy": "vp-sales@enterprise.com"
+  }
+]

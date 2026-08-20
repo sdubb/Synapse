@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Plug, CheckCircle2, ArrowRight, Shield, Zap, Server, RefreshCw, Send, Play, Terminal, ExternalLink } from "lucide-react";
 
 export function EnterpriseConnectorsHub() {
@@ -7,6 +7,8 @@ export function EnterpriseConnectorsHub() {
   const [testPayload, setTestPayload] = useState("");
   const [testResult, setTestResult] = useState(null);
   const [isTesting, setIsTesting] = useState(false);
+  const [healthResult, setHealthResult] = useState(null);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
 
   const fetchConnectors = async () => {
     try {
@@ -32,6 +34,22 @@ export function EnterpriseConnectorsHub() {
     setSelectedConnector(conn);
     setTestPayload(JSON.stringify(conn.samplePayload, null, 2));
     setTestResult(null);
+    setHealthResult(null);
+  };
+
+  const handleCheckHealth = async () => {
+    if (!selectedConnector) return;
+    setIsCheckingHealth(true);
+    setHealthResult(null);
+    try {
+      const res = await fetch(`http://localhost:4000/api/v1/connectors/${selectedConnector.id}/health`);
+      const data = await res.json();
+      setHealthResult(data);
+    } catch (err) {
+      setHealthResult({ error: err.message, status: "PROBE_ERROR" });
+    } finally {
+      setIsCheckingHealth(false);
+    }
   };
 
   const handleRunConnectorTest = async () => {
@@ -104,14 +122,14 @@ export function EnterpriseConnectorsHub() {
               <div>
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                    conn.status === "CONNECTED" || conn.status === "ACTIVE"
+                    conn.status === "CONFIGURED" || conn.status === "CONNECTED"
                       ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
                       : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                   }`}>
-                    {conn.status}
+                    {conn.status === "NOT_CONFIGURED" ? "NOT CONFIGURED" : conn.status}
                   </span>
                   <span className="text-[10px] font-mono text-slate-400">
-                    {conn.activeAgentsCount} Agents
+                    Key: {conn.credentialKey}
                   </span>
                 </div>
                 <h3 className="text-xs font-bold text-white mt-2">{conn.name}</h3>
@@ -155,6 +173,33 @@ export function EnterpriseConnectorsHub() {
                 <div>2. {selectedConnector.setupGuide.step2}</div>
                 <div>3. {selectedConnector.setupGuide.step3}</div>
               </div>
+            </div>
+
+            <div className="pt-2 border-t border-border">
+              <button
+                disabled={isCheckingHealth}
+                onClick={handleCheckHealth}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-surface-hover hover:bg-slate-800 border border-border text-slate-200 text-xs font-semibold transition"
+              >
+                <Shield className="w-3.5 h-3.5 text-cyan-400" />
+                <span>{isCheckingHealth ? "Probing Vault..." : "Probe Secrets Gateway Credentials"}</span>
+              </button>
+
+              {healthResult && (
+                <div className={`mt-2 p-3 rounded-xl border text-[11px] space-y-1 ${
+                  healthResult.isHealthy 
+                    ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-300"
+                    : "bg-amber-950/20 border-amber-500/30 text-amber-300"
+                }`}>
+                  <div className="flex items-center justify-between font-bold">
+                    <span>Status: {healthResult.status}</span>
+                    <span>{healthResult.latencyMs} ms</span>
+                  </div>
+                  <div className="text-[10px] text-slate-300">
+                    {healthResult.details || healthResult.error}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

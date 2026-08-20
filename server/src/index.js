@@ -381,8 +381,15 @@ app.post("/api/v1/incidents/:id/resolve", (req, res) => {
   }
 });
 app.get("/api/v1/audit", (req, res) => res.json({ ledger: productionDb.getAuditLedger() }));
-app.get("/api/v1/policies", (req, res) => res.json({ policies: [] }));
 app.get("/api/v1/connectors", (req, res) => res.json({ connectors: connectors.getConnectors() }));
+app.get("/api/v1/connectors/:id/health", async (req, res) => {
+  try {
+    const health = await connectors.checkConnectorHealth(req.params.id);
+    res.json(health);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post("/api/v1/pipeline/execute", async (req, res) => {
   try {

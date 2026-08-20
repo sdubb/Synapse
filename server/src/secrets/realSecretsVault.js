@@ -1,4 +1,4 @@
-﻿import crypto from "crypto";
+import crypto from "crypto";
 
 const MASTER_ENCRYPTION_KEY = crypto.scryptSync("synapse_master_enterprise_secret_2026", "synapse_salt", 32);
 const IV_LENGTH = 16;
@@ -35,6 +35,10 @@ export class RealSecretsVault {
     const encrypted = this.encrypt(plaintextSecret);
     this.encryptedVault.set(`${tenantId}:${serviceName}`, encrypted);
     return encrypted;
+  }
+
+  hasCredential(tenantId, serviceName) {
+    return this.encryptedVault.has(`${tenantId}:${serviceName}`);
   }
 
   // Get raw encrypted-at-rest payload from DB
