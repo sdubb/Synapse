@@ -367,12 +367,30 @@ app.get("/api/v1/connectors", (req, res) => res.json({ connectors: connectors.ge
 app.post("/api/v1/pipeline/execute", async (req, res) => {
   try {
     const { agentId, userGoal, spendLimitUsd } = req.body;
+    const id = agentId || "wf-sales-rep";
+
+    // Auto-register pipeline as agent if it doesn't exist (prevents FK constraint failures)
+    try {
+      productionDb.insertAgent({
+        id,
+        name: `Pipeline: ${id}`,
+        provider: "synapse-pipeline",
+        department: "Autonomous Pipelines",
+        owner: "operator@synapse",
+        status: "ACTIVE",
+        securityScore: 90,
+        spendCeilingUsd: Number(spendLimitUsd) || 5000,
+        requiresHitlAboveUsd: 1000,
+        systemPrompt: userGoal || "Autonomous pipeline execution"
+      });
+    } catch (e) { /* already exists */ }
+
     universalAgentEngine.runLiveAgentTask({
-      agentId: agentId || "wf-sales-rep",
+      agentId: id,
       userGoal: userGoal || "Autonomous enterprise task",
       spendLimitUsd: Number(spendLimitUsd) || 500
     });
-    res.json({ success: true, message: "Autonomous agy agent engine started." });
+    res.json({ success: true, message: "Pipeline execution started." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

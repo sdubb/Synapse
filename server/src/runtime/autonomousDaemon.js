@@ -1,4 +1,4 @@
-﻿import { spawn } from "child_process";
+import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import { productionDb } from "../storage/productionDb.js";
@@ -45,58 +45,84 @@ export class AutonomousCronDaemon {
 
       console.log(`[DAEMON_ITERATION]: Running loop cycle #${daemonState.runsCount} for agent ${agentId} (Tx: ${txId})...`);
 
-      // 1. Record transaction in database
-      productionDb.insertTransaction({
-        id: txId,
-        agentId,
-        goal: `[24/7 Loop #${daemonState.runsCount}] ${goal}`,
-        status: "IN_PROGRESS",
-        startedAt: new Date().toISOString(),
-        ephemeralTokenId: `syn_eph_loop_${Date.now()}`
-      });
-
-      this.broadcastEvent({
-        type: "DAEMON_CYCLE_STARTED",
-        data: {
-          agentId,
-          cycleNumber: daemonState.runsCount,
-          txId,
-          status: "RUNNING_24_7",
-          timestamp: daemonState.lastRunAt
+      try {
+        // Auto-register pipeline as an agent if it doesn't already exist (satisfies FK constraint)
+        try {
+          productionDb.insertAgent({
+            id: agentId,
+            name: `Pipeline Daemon: ${agentId}`,
+            provider: "synapse-daemon",
+            department: "Autonomous Pipelines",
+            owner: "operator@synapse",
+            status: "ACTIVE",
+            securityScore: 90,
+            spendCeilingUsd: 5000,
+            requiresHitlAboveUsd: 1000,
+            systemPrompt: goal
+          });
+        } catch (e) {
+          // Agent already exists — that's fine (INSERT OR REPLACE handles it)
         }
-      });
 
-      // 2. Pre-flight Rego Safety Check
-      const eval1 = realRegoEvaluator.evaluate({ tool_name: "query_database", query: goal });
-      productionDb.insertTransactionStep(txId, 1, "continuous_audit_probe", { cycle: daemonState.runsCount }, "no_op", {}, "COMPLETED");
-      productionDb.appendAuditBlock(agentId, "continuous_audit_probe", eval1.verdict, eval1.reason, eval1.riskScore);
-
-      // 3. Spawn real agy.exe or node worker
-      const hasAgy = fs.existsSync(AGY_EXE);
-      const cmd = hasAgy ? AGY_EXE : "node";
-      const args = hasAgy
-        ? ["-p", `Poll queue status for cycle ${daemonState.runsCount}`, "--output-format", "text", "--dangerously-skip-permissions"]
-        : ["-e", `console.log("Completed 24/7 cycle ${daemonState.runsCount}")`];
-
-      const child = spawn(cmd, args, { shell: true });
-      daemonState.activePid = child.pid;
-
-      child.on("close", (code) => {
-        productionDb.insertTransactionStep(txId, 2, "execute_cycle_task", { pid: child.pid, exitCode: code }, "no_op", {}, "COMPLETED");
-        productionDb.updateTransactionStatus(txId, "COMMITTED", null, 0);
-        productionDb.appendAuditBlock(agentId, "execute_cycle_task", "ALLOWED", `Cycle #${daemonState.runsCount} finished cleanly`, 5);
+        // 1. Record transaction in database
+        productionDb.insertTransaction({
+          id: txId,
+          agentId,
+          goal: `[24/7 Loop #${daemonState.runsCount}] ${goal}`,
+          status: "IN_PROGRESS",
+          startedAt: new Date().toISOString(),
+          ephemeralTokenId: `syn_eph_loop_${Date.now()}`
+        });
 
         this.broadcastEvent({
-          type: "DAEMON_CYCLE_COMPLETED",
+          type: "DAEMON_CYCLE_STARTED",
           data: {
             agentId,
             cycleNumber: daemonState.runsCount,
             txId,
-            exitCode: code,
-            nextCycleInMs: intervalMs
+            status: "RUNNING_24_7",
+            timestamp: daemonState.lastRunAt
           }
         });
-      });
+
+        // 2. Pre-flight Rego Safety Check
+        const eval1 = realRegoEvaluator.evaluate({ tool_name: "query_database", query: goal });
+        productionDb.insertTransactionStep(txId, 1, "continuous_audit_probe", { cycle: daemonState.runsCount }, "no_op", {}, "COMPLETED");
+        productionDb.appendAuditBlock(agentId, "continuous_audit_probe", eval1.verdict, eval1.reason, eval1.riskScore);
+
+        // 3. Spawn real agy.exe or node worker
+        const hasAgy = fs.existsSync(AGY_EXE);
+        const cmd = hasAgy ? AGY_EXE : "node";
+        const args = hasAgy
+          ? ["-p", `Poll queue status for cycle ${daemonState.runsCount}`, "--output-format", "text", "--dangerously-skip-permissions"]
+          : ["-e", `console.log("Completed 24/7 cycle ${daemonState.runsCount}")`];
+
+        const child = spawn(cmd, args, { shell: true });
+        daemonState.activePid = child.pid;
+
+        child.on("close", (code) => {
+          try {
+            productionDb.insertTransactionStep(txId, 2, "execute_cycle_task", { pid: child.pid, exitCode: code }, "no_op", {}, "COMPLETED");
+            productionDb.updateTransactionStatus(txId, "COMMITTED", null, 0);
+            productionDb.appendAuditBlock(agentId, "execute_cycle_task", "ALLOWED", `Cycle #${daemonState.runsCount} finished cleanly`, 5);
+          } catch (stepErr) {
+            console.error(`[DAEMON_ITERATION]: Error recording cycle result: ${stepErr.message}`);
+          }
+
+          this.broadcastEvent({
+            type: "DAEMON_CYCLE_COMPLETED",
+            data: {
+              agentId,
+              cycleNumber: daemonState.runsCount,
+              txId,
+              exitCode: code,
+              nextCycleInMs: intervalMs
+            }
+          });
+        });
+      } catch (iterErr) {
+        console.error(`[DAEMON_ITERATION]: Cycle #${daemonState.runsCount} failed for ${agentId}: ${iterErr.message}`);
+      }
     };
 
     // Execute first iteration immediately, then set recurring timer
