@@ -160,6 +160,11 @@ async function runTestSuite() {
   const revisions = pipelineStateEngine.getRevisions(targetPipeId);
   assert(revisions.length >= 1, `Retrieved ${revisions.length} revision(s) from SQLite`);
 
+  // Teardown: Clean up test pipeline from database
+  pipelineStateEngine.deletePipeline(targetPipeId);
+  pipelineStateEngine.deletePipeline("pipe_crypto_arb_01");
+  pipelineStateEngine.deletePipeline(draft.id);
+
   console.log("\n===============================================================");
   console.log(`  ✦ SUITE RESULTS: ${passedCount} PASSED | ${failedCount} FAILED`);
   console.log("===============================================================");
