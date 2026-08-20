@@ -21,6 +21,7 @@ export class EnterpriseConnectorRegistry {
         category: "CRM & Customer Service",
         deploymentType: "Zero-Code Named Credential / External Service",
         secretServiceName: "salesforce_oauth_token",
+        probeUrl: "https://login.salesforce.com/services/oauth2/introspect",
         activeAgentsCount: 0,
         description: "Intercepts autonomous Atlas reasoning actions before mutating Salesforce CRM, Service Cloud, or billing records.",
         setupGuide: {
@@ -185,7 +186,9 @@ export class EnterpriseConnectorRegistry {
         };
         result.isHealthy = probeRes.ok;
         result.status = probeRes.ok ? "LIVE_CONNECTED" : "NETWORK_DEGRADED";
-        result.details = `Live HTTPS round-trip handshake successful (${netLatencyMs}ms).`;
+        result.details = probeRes.ok
+          ? `Live HTTPS round-trip handshake successful (${netLatencyMs}ms).`
+          : `Live HTTPS round-trip to ${probeUrl} returned HTTP ${probeRes.status} (${netLatencyMs}ms).`;
       } catch (err) {
         const netLatencyMs = Number((performance.now() - netStart).toFixed(2));
         result.liveNetworkProbe = {
