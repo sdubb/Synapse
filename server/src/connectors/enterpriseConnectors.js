@@ -161,9 +161,9 @@ export class EnterpriseConnectorRegistry {
       name: connector.name,
       status: "CREDENTIAL_STORED",
       credentialPresent: isValidPayload,
-      isHealthy: isValidPayload,
+      isHealthy: false, // Strictly false until a live network round-trip probe succeeds
       vaultLatencyMs,
-      details: "Encrypted AES-256-GCM credential present in Secrets Gateway.",
+      details: "Encrypted AES-256-GCM credential present in Secrets Gateway (No live probe run).",
       checkedAt: new Date().toISOString()
     };
 
@@ -183,7 +183,9 @@ export class EnterpriseConnectorRegistry {
           success: probeRes.ok,
           networkLatencyMs: netLatencyMs
         };
+        result.isHealthy = probeRes.ok;
         result.status = probeRes.ok ? "LIVE_CONNECTED" : "NETWORK_DEGRADED";
+        result.details = `Live HTTPS round-trip handshake successful (${netLatencyMs}ms).`;
       } catch (err) {
         const netLatencyMs = Number((performance.now() - netStart).toFixed(2));
         result.liveNetworkProbe = {
