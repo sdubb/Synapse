@@ -16,19 +16,43 @@ export class CommandTokenNormalizer {
 
     let text = typeof rawInput === "string" ? rawInput : JSON.stringify(rawInput);
 
-    // 1. Unescape hex and unicode sequences (e.g. \x44\x52 -> DR)
-    text = text.replace(/\\x([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-    text = text.replace(/\\u([0-9A-Fa-f]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    // 1. Recursive URL & Percent-Encoding Decode until stabilization (max 10 rounds)
+    let prevText = "";
+    let rounds = 0;
+    while (text !== prevText && rounds < 10) {
+      prevText = text;
+      rounds++;
+      try {
+        text = decodeURIComponent(text);
+      } catch (e) {
+        text = text.replace(/%([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+      }
+    }
 
-    // 2. Strip multi-line comments (/* ... */) and single-line comments (-- ... or # ...)
+    // 2. Recursive Hex and Unicode escape decode (\x44\x52 -> DR, \u0044 -> D)
+    prevText = "";
+    rounds = 0;
+    while (text !== prevText && rounds < 10) {
+      prevText = text;
+      rounds++;
+      text = text.replace(/\\x([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+      text = text.replace(/\\u([0-9A-Fa-f]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    }
+
+    // 3. Strip Null-Bytes (\x00) and ASCII/Unicode Control Characters
+    text = text.replace(/[\x00-\x1F\x7F-\x9F]/g, " ");
+    text = text.replace(/\\x00/gi, " ");
+    text = text.replace(/\\0/g, " ");
+
+    // 4. Strip multi-line comments (/* ... */) and single-line comments (-- ... or # ...)
     text = text.replace(/\/\*[\s\S]*?\*\//g, " ");
     text = text.replace(/--[^\r\n]*/g, " ");
     text = text.replace(/#[^\r\n]*/g, " ");
 
-    // 3. Normalize all whitespace (newlines, tabs, multiple spaces) to a single space
+    // 5. Normalize all whitespace (newlines, tabs, multiple spaces) to a single space
     text = text.replace(/\s+/g, " ").trim().toUpperCase();
 
-    // 4. Tokenize into individual words
+    // 6. Tokenize into individual words
     const tokens = text.split(/[\s;()]+/).filter(Boolean);
 
     // 5. Detect destructive statement patterns

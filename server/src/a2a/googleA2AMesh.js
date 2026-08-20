@@ -202,6 +202,23 @@ export class GoogleA2AMeshEngine {
     }
   }
 
+  _getPermittedActionsForCapTier(targetCapabilities = [], originSpendCap = 5000) {
+    const highRiskActions = ["stripe_treasury_payout", "tsmc_wafer_allocation", "dgx_h100_cluster_procurement", "k8s_cluster_drain_restart", "vault_secret_rotation", "gpu_slurm_partition_drain"];
+    const midRiskActions = ["sap_erp_ledger_sync", "salesforce_crm_sync", "bank_reconciliation", "enterprise_msa_drafting", "sap_purchase_order_gen"];
+
+    if (originSpendCap < 2500) {
+      // Low Cap Tier (< $2,500): Read-only audit & inspection actions only
+      const safeSubset = targetCapabilities.filter(c => !highRiskActions.includes(c) && !midRiskActions.includes(c));
+      return safeSubset.length > 0 ? safeSubset : ["read_only_verify", "query_audit_ledger"];
+    } else if (originSpendCap < 50000) {
+      // Mid Cap Tier ($2,500 - $50,000): Standard operational workflows (high-stakes treasury/procurement filtered)
+      return targetCapabilities.filter(c => !highRiskActions.includes(c));
+    } else {
+      // High Cap Tier (> $50,000): Full unrestricted delegation capabilities
+      return targetCapabilities;
+    }
+  }
+
   /**
    * Derives trust matrix dynamically from registered agent cards and SQLite agent entities
    */
@@ -237,16 +254,19 @@ export class GoogleA2AMeshEngine {
     }
 
     for (const origin of entityMap.values()) {
+      const originSpendCap = origin.governance?.spendCeilingUsd || 5000;
       const allowed = origin.allowedDelegates || [];
       for (const targetId of allowed) {
         const target = entityMap.get(targetId) || this.getAgentCard(targetId) || { id: targetId, name: targetId, capabilities: [] };
+        const permittedActions = this._getPermittedActionsForCapTier(target.capabilities, originSpendCap);
+
         matrix.push({
           originId: origin.id,
           origin: origin.name,
           targetId: target.id,
           target: target.name,
-          permittedActions: target.capabilities || [],
-          maxCapUsd: origin.governance?.spendCeilingUsd || 5000,
+          permittedActions,
+          maxCapUsd: originSpendCap,
           status: "VERIFIED_MUTUAL_TRUST",
           computedAt: new Date().toISOString()
         });
