@@ -559,7 +559,7 @@ export class DagRuntimeExecutor {
 
   async _executeHumanNotification(node, params, context) {
     const approvalId = "hitl_" + Date.now();
-    await slackDispatcher.dispatchHitlApproval({
+    const dispatchResult = await slackDispatcher.dispatchHitlApproval({
       approvalId,
       agentName: context.pipelineName,
       toolName: node.tool,
@@ -570,7 +570,12 @@ export class DagRuntimeExecutor {
     return {
       archetype: "HUMAN_OVERSIGHT",
       approvalId,
-      channel: params.channel || "#security-alerts",
+      channel: dispatchResult.channel || params.channel || "#security-alerts",
+      delivered: dispatchResult.delivered,
+      isFallback: dispatchResult.isFallback,
+      statusCode: dispatchResult.statusCode,
+      latencyMs: dispatchResult.latencyMs || 0.5,
+      deliveryMessage: dispatchResult.message,
       status: "NOTIFICATION_DISPATCHED",
       awaitingHumanAction: false
     };

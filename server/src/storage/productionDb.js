@@ -323,12 +323,12 @@ export class ProductionDatabase {
     stmt.run(status, rollbackReason, revertedSteps, id);
   }
 
-  insertTransactionStep(txId, stepNumber, toolName, params, inverseTool, inverseParams, status) {
+  insertTransactionStep(txId, stepNumber, toolName, params, inverseTool, inverseParams, status, executedAt = new Date().toISOString()) {
     const stmt = this.db.prepare(`
-      INSERT INTO transaction_steps (transaction_id, step_number, tool_name, parameters_json, inverse_tool, inverse_params_json, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO transaction_steps (transaction_id, step_number, tool_name, parameters_json, inverse_tool, inverse_params_json, status, executed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    stmt.run(txId, stepNumber, toolName, JSON.stringify(params), inverseTool, JSON.stringify(inverseParams), status);
+    stmt.run(txId, stepNumber, toolName, JSON.stringify(params), inverseTool, JSON.stringify(inverseParams), status, executedAt);
   }
 
   // --- Audit Ledger ---
