@@ -207,12 +207,39 @@ export class GoogleA2AMeshEngine {
    */
   getTrustMatrix() {
     const matrix = [];
+    const dbAgents = productionDb.getAgents();
     const registeredCards = this.getAgentCards();
 
-    for (const origin of registeredCards) {
+    // Index all available entities by ID
+    const entityMap = new Map();
+    for (const card of registeredCards) entityMap.set(card.id, card);
+    for (const agent of dbAgents) {
+      if (!entityMap.has(agent.id)) {
+        entityMap.set(agent.id, {
+          id: agent.id,
+          name: agent.name,
+          role: agent.department || "Enterprise Autonomous Agent",
+          capabilities: [agent.provider || "custom_tool"],
+          allowedDelegates: ["agent-finance-treasury", "agent-sre-commander"],
+          governance: {
+            spendCeilingUsd: agent.spendCeilingUsd || 5000,
+            requiresHitlAboveUsd: agent.requiresHitlAboveUsd || 1000
+          }
+        });
+      } else {
+        // Sync SQLite spend limits
+        const existing = entityMap.get(agent.id);
+        existing.governance = {
+          spendCeilingUsd: agent.spendCeilingUsd || existing.governance?.spendCeilingUsd || 5000,
+          requiresHitlAboveUsd: agent.requiresHitlAboveUsd || existing.governance?.requiresHitlAboveUsd || 1000
+        };
+      }
+    }
+
+    for (const origin of entityMap.values()) {
       const allowed = origin.allowedDelegates || [];
       for (const targetId of allowed) {
-        const target = this.getAgentCard(targetId) || { id: targetId, name: targetId, capabilities: [] };
+        const target = entityMap.get(targetId) || this.getAgentCard(targetId) || { id: targetId, name: targetId, capabilities: [] };
         matrix.push({
           originId: origin.id,
           origin: origin.name,

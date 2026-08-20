@@ -47,7 +47,7 @@ export class UniversalCliRuntimeManager {
         name: "Synapse Native Daemon (Zero-Dependency)",
         binaryName: "node",
         description: "Built-in zero-dependency autonomous loop runner that executes directly without any external CLI installed.",
-        buildCommand: (goal, model) => ["-e", `console.log("Synapse Native Worker executing: ${goal}")`]
+        buildCommand: (goal, model) => ["-e", "\"console.log(JSON.stringify({ status: \\\"EXECUTED\\\", goal: \\\"" + (goal || "task").replace(/"/g, "") + "\\\" }))\""]
       }
     };
   }
