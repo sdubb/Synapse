@@ -21,6 +21,7 @@ import { realRegoEvaluator } from "./policy/realRegoEvaluator.js";
 import { realSecretsVault } from "./secrets/realSecretsVault.js";
 import { EnterpriseConnectorRegistry } from "./connectors/enterpriseConnectors.js";
 import { DiagnosticsEngine } from "./core/diagnostics.js";
+import { dagRuntimeExecutor } from "./runtime/dagRuntimeExecutor.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -57,6 +58,7 @@ universalVerificationEngine.broadcastEvent = broadcastEvent;
 universalMcpGateway.broadcastEvent = broadcastEvent;
 pipelineStateEngine.broadcastEvent = broadcastEvent;
 architectAgent.broadcastEvent = broadcastEvent;
+dagRuntimeExecutor.broadcastEvent = broadcastEvent;
 
 const connectors = new EnterpriseConnectorRegistry(null, broadcastEvent);
 const diagnostics = new DiagnosticsEngine(universalAgentEngine, productionDb);
@@ -369,11 +371,18 @@ app.post("/api/v1/pipeline/execute", async (req, res) => {
     const { agentId, userGoal, spendLimitUsd } = req.body;
     const id = agentId || "wf-sales-rep";
 
+    const pipe = productionDb.getPipeline(id);
+    if (pipe && pipe.nodes && pipe.nodes.length > 0) {
+      // Execute the REAL multi-node DAG step-by-step
+      dagRuntimeExecutor.executePipeline(pipe, { goal: userGoal, trigger: "Manual Run" });
+      return res.json({ success: true, message: `Pipeline '${pipe.name}' DAG execution started (${pipe.nodes.length} stages).` });
+    }
+
     // Auto-register pipeline as agent if it doesn't exist (prevents FK constraint failures)
     try {
       productionDb.insertAgent({
         id,
-        name: `Pipeline: ${id}`,
+        name: `Agent: ${id}`,
         provider: "synapse-pipeline",
         department: "Autonomous Pipelines",
         owner: "operator@synapse",
@@ -390,7 +399,7 @@ app.post("/api/v1/pipeline/execute", async (req, res) => {
       userGoal: userGoal || "Autonomous enterprise task",
       spendLimitUsd: Number(spendLimitUsd) || 500
     });
-    res.json({ success: true, message: "Pipeline execution started." });
+    res.json({ success: true, message: "Agent task execution started." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
