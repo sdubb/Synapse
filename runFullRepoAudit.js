@@ -159,6 +159,16 @@ const auditMap = {
     classification: "REAL",
     justification: "Spawns child processes using child_process.spawn, tracks real OS process handles/PIDs, and records steps in SQLite."
   },
+  // 30. CLI Adapters
+  "server/src/runtime/cliAdapters.js": {
+    classification: "REAL",
+    justification: "Multi-CLI Layer 2 adapter mapping installed CLI binaries to native plan/read-only and structured output flags."
+  },
+  // 31. CLI Invocation Profiles
+  "server/src/runtime/cliInvocationProfiles.js": {
+    classification: "REAL",
+    justification: "Multi-profile orchestration engine reusing single installed CLI across Actor, Verifier, and Remediator roles."
+  },
   // 30. Real Secrets Vault
   "server/src/secrets/realSecretsVault.js": {
     classification: "REAL",
@@ -254,15 +264,10 @@ const auditMap = {
     classification: "REAL",
     justification: "Defines runtime verification contracts and outcome validation assertions."
   },
-  // 49. Verifier MCP Client
+  // 51. Verifier MCP Client
   "server/src/verification/verifierMcpClient.js": {
     classification: "REAL",
     justification: "JSON-RPC client communicating with MCP gateway with honest error propagation (no fake CONFIRMED_VIA_MCP fallbacks)."
-  },
-  // 50. Single API Critic Verifier
-  "server/src/verification/singleApiCriticVerifier.js": {
-    classification: "REAL",
-    justification: "Single-API isolated-context adversarial critic verifier with structurally enforced read-only toolsets (0 extra CLIs/subscriptions)."
   }
 };
 
